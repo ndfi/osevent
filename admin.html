@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ממשק ניהול – גרעין אהל שלמה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Frank+Ruhl+Libre:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:      #0A0705;
+      --brown-dark: #4A2010;
+      --brown-warm: #B8621E;
+      --gold:       #C8882A;
+      --gold-light: #D4A054;
+      --sand:       #E8C080;
+      --sand-light: #F0D4A0;
+      --cream:      #FAF0DC;
+      --white:      #FFFDF8;
+      --surface:    rgba(20,10,5,0.92);
+      --border:     rgba(200,136,42,0.2);
+      --gradient-desert: linear-gradient(135deg, #4A2010 0%, #B8621E 40%, #C8882A 70%, #E8C080 100%);
+      --font-display: 'Frank Ruhl Libre', serif;
+      --font-body:    'Heebo', sans-serif;
+      --radius-btn:   50px;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { direction:rtl; }
+    body { background:var(--black); color:var(--cream); font-family:var(--font-body); min-height:100vh; line-height:1.7; }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-track { background:var(--black); }
+    ::-webkit-scrollbar-thumb { background:var(--brown-warm); border-radius:3px; }
+
+    /* ── PROGRESS BAR ── */
+    #progress-bar {
+      height:3px; background:var(--gradient-desert);
+      position:fixed; top:0; right:0; left:0; z-index:999;
+      transform:scaleX(0); transform-origin:right; transition:transform .4s ease;
+    }
+    #progress-bar.show { transform:scaleX(1); }
+
+    /* ══ AUTH PAGE ══ */
+    #auth-page {
+      min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background:radial-gradient(ellipse at center, rgba(74,32,16,.38) 0%, var(--black) 70%);
+      padding:24px;
+    }
+    .auth-card {
+      background:rgba(18,9,4,.96); border:1px solid var(--border);
+      border-radius:22px; padding:50px 42px; width:100%; max-width:420px; text-align:center;
+    }
+    .auth-logo {
+      width:80px; height:80px; margin:0 auto 22px;
+    }
+    .auth-card h1 { font-family:var(--font-display); font-size:1.5rem; color:var(--sand); margin-bottom:6px; }
+    .auth-card p { color:var(--gold-light); font-size:0.84rem; margin-bottom:32px; }
+    .form-group { margin-bottom:18px; text-align:right; }
+    .form-group label { display:block; font-size:.82rem; color:var(--gold-light); margin-bottom:7px; }
+    .form-input {
+      width:100%; padding:13px 16px;
+      background:rgba(10,7,5,.75); border:1px solid var(--border);
+      border-radius:10px; color:var(--cream); font-family:var(--font-body); font-size:.95rem;
+      outline:none; transition:border-color .25s;
+    }
+    .form-input:focus { border-color:var(--gold); }
+    .form-input[type=email], .form-input[type=password] { direction:ltr; text-align:right; }
+    .form-input::placeholder { color:rgba(200,150,80,.3); }
+    .btn-primary {
+      width:100%; padding:14px; background:var(--gradient-desert);
+      color:var(--black); font-family:var(--font-body); font-size:1rem; font-weight:700;
+      border:none; border-radius:var(--radius-btn); cursor:pointer;
+      transition:all .3s; box-shadow:0 6px 24px rgba(200,136,42,.32);
+    }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 32px rgba(200,136,42,.52); }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    .auth-error { color:#e07070; font-size:.84rem; margin-top:14px; min-height:20px; }
+
+    /* ══ ADMIN NAVBAR ══ */
+    .admin-nav {
+      position:sticky; top:0; z-index:100;
+      background:rgba(10,7,5,.92); backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 32px;
+    }
+    .nav-brand { display:flex; align-items:center; gap:12px; }
+    .nav-brand-logo { width:44px; height:44px; }
+    .nav-brand-text { font-family:var(--font-display); font-size:.98rem; color:var(--sand); line-height:1.3; }
+    .nav-brand-text small { display:block; font-size:.7rem; color:var(--gold-light); font-family:var(--font-body); font-weight:300; }
+    .nav-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    #nav-user { font-size:.8rem; color:var(--gold-light); }
+    .btn-ghost {
+      background:transparent; border:1px solid rgba(200,136,42,.3); color:var(--gold-light);
+      font-size:.8rem; padding:7px 16px; border-radius:var(--radius-btn); cursor:pointer;
+      transition:all .25s; font-family:var(--font-body); text-decoration:none; display:inline-block;
+    }
+    .btn-ghost:hover { background:rgba(200,136,42,.14); color:var(--cream); }
+
+    /* ══ ADMIN CONTENT ══ */
+    .admin-content { max-width:1100px; margin:0 auto; padding:40px 24px; }
+    .admin-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:34px; flex-wrap:wrap; gap:14px;
+    }
+    .admin-header h1 { font-family:var(--font-display); font-size:1.8rem; color:var(--sand); }
+    .btn-new {
+      display:flex; align-items:center; gap:8px; padding:12px 26px;
+      background:var(--gradient-desert); color:var(--black);
+      font-family:var(--font-body); font-size:.9rem; font-weight:700;
+      border:none; border-radius:var(--radius-btn); cursor:pointer;
+      transition:all .3s; box-shadow:0 4px 20px rgba(200,136,42,.32);
+    }
+    .btn-new:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(200,136,42,.52); }
+
+    /* ══ TABLE ══ */
+    .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th {
+      padding:13px 20px; font-size:.76rem; letter-spacing:1.5px;
+      color:var(--gold-light); text-transform:uppercase; text-align:right;
+      background:rgba(74,32,16,.28); font-weight:500;
+    }
+    td { padding:15px 20px; border-top:1px solid rgba(200,136,42,.09); font-size:.9rem; color:var(--cream); vertical-align:middle; }
+    tr:hover td { background:rgba(74,32,16,.13); }
+    .td-thumb { width:58px; height:42px; object-fit:cover; border-radius:7px; }
+    .td-thumb-ph { width:58px; height:42px; border-radius:7px; background:var(--gradient-desert); opacity:.45; }
+    .badge-open  { color:#7ed090; font-size:.76rem; }
+    .badge-closed{ color:#e07070; font-size:.76rem; }
+    .td-actions { display:flex; gap:8px; }
+    .btn-edit, .btn-del {
+      padding:6px 15px; border-radius:20px; font-size:.78rem; cursor:pointer;
+      transition:all .25s; font-family:var(--font-body); border:1px solid;
+    }
+    .btn-edit { background:rgba(200,136,42,.1); border-color:rgba(200,136,42,.33); color:var(--gold-light); }
+    .btn-edit:hover { background:rgba(200,136,42,.25); color:var(--sand); }
+    .btn-del  { background:rgba(200,80,80,.08); border-color:rgba(200,80,80,.28); color:#e07070; }
+    .btn-del:hover  { background:rgba(200,80,80,.2); }
+
+    /* ══ MODAL OVERLAY ══ */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:200;
+      background:rgba(10,7,5,.95);
+      display:flex; align-items:flex-start; justify-content:center;
+      overflow-y:auto; padding:40px 24px;
+      opacity:0; pointer-events:none; transition:opacity .3s;
+    }
+    .modal-overlay.active { opacity:1; pointer-events:all; }
+
+    /* ══ FORM MODAL ══ */
+    .form-modal {
+      width:100%; max-width:640px;
+      background:rgba(18,9,4,.98); border:1px solid var(--border);
+      border-radius:22px; padding:42px;
+      transform:translateY(22px); transition:transform .35s cubic-bezier(.22,.68,0,1.2);
+    }
+    .modal-overlay.active .form-modal { transform:translateY(0); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:30px; }
+    .modal-header h2 { font-family:var(--font-display); font-size:1.4rem; color:var(--sand); }
+    .btn-close {
+      background:rgba(200,136,42,.1); border:1px solid var(--border); color:var(--gold-light);
+      width:38px; height:38px; border-radius:50%; font-size:1.15rem; cursor:pointer;
+      transition:background .2s; display:flex; align-items:center; justify-content:center;
+    }
+    .btn-close:hover { background:rgba(200,136,42,.25); }
+
+    .f-group { margin-bottom:20px; }
+    .f-group label { display:block; font-size:.82rem; color:var(--gold-light); margin-bottom:8px; }
+    .f-input, .f-textarea {
+      width:100%; padding:12px 16px;
+      background:rgba(10,7,5,.72); border:1px solid var(--border);
+      border-radius:10px; color:var(--cream); font-family:var(--font-body); font-size:.93rem;
+      outline:none; transition:border-color .25s;
+    }
+    .f-input:focus, .f-textarea:focus { border-color:var(--gold); }
+    .f-input::placeholder, .f-textarea::placeholder { color:rgba(200,150,80,.3); }
+    .f-textarea { min-height:110px; resize:vertical; }
+    .f-input[type=url], .f-input[type=datetime-local] { direction:ltr; text-align:right; }
+    .f-row { display:flex; gap:14px; flex-wrap:wrap; }
+    .f-row .f-group { flex:1; min-width:160px; }
+
+    /* ── UPLOAD ── */
+    .upload-area {
+      border:2px dashed rgba(200,136,42,.28); border-radius:12px;
+      padding:30px; text-align:center; cursor:pointer; position:relative;
+      transition:all .28s; overflow:hidden;
+    }
+    .upload-area:hover, .upload-area.drag-over { border-color:var(--gold); background:rgba(200,136,42,.05); }
+    .upload-area input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+    .upload-icon { font-size:1.8rem; margin-bottom:8px; }
+    .upload-text { font-size:.86rem; color:var(--gold-light); }
+    .upload-text small { display:block; color:rgba(200,150,80,.46); margin-top:4px; font-size:.73rem; }
+    #upload-preview { width:100%; max-height:170px; object-fit:cover; border-radius:9px; margin-top:12px; display:none; }
+
+    /* ── FORM FOOTER ── */
+    .f-footer { display:flex; gap:12px; margin-top:10px; }
+    .btn-save {
+      padding:13px 32px; background:var(--gradient-desert);
+      color:var(--black); font-family:var(--font-body); font-size:.95rem; font-weight:700;
+      border:none; border-radius:var(--radius-btn); cursor:pointer;
+      transition:all .3s; box-shadow:0 4px 18px rgba(200,136,42,.32);
+    }
+    .btn-save:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(200,136,42,.52); }
+    .btn-save:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    .btn-cancel {
+      padding:13px 22px; background:transparent; border:1px solid var(--border);
+      color:var(--gold-light); font-family:var(--font-body); font-size:.95rem;
+      border-radius:var(--radius-btn); cursor:pointer; transition:all .25s;
+    }
+    .btn-cancel:hover { background:rgba(200,136,42,.1); color:var(--cream); }
+
+    /* ══ CONFIRM DIALOG ══ */
+    .confirm-dialog {
+      position:fixed; inset:0; z-index:400;
+      background:rgba(10,7,5,.96);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity .25s;
+    }
+    .confirm-dialog.active { opacity:1; pointer-events:all; }
+    .confirm-box {
+      background:rgba(18,9,4,.98); border:1px solid rgba(200,80,80,.28);
+      border-radius:18px; padding:38px; max-width:370px; text-align:center;
+    }
+    .confirm-box h3 { font-family:var(--font-display); font-size:1.3rem; color:var(--cream); margin-bottom:10px; }
+    .confirm-box p  { color:var(--gold-light); font-size:.88rem; margin-bottom:24px; }
+    .confirm-actions { display:flex; gap:12px; justify-content:center; }
+    .btn-del-confirm {
+      padding:11px 24px; background:rgba(200,80,80,.18); border:1px solid rgba(200,80,80,.38);
+      color:#e07070; font-family:var(--font-body); font-size:.9rem;
+      border-radius:var(--radius-btn); cursor:pointer; transition:all .25s;
+    }
+    .btn-del-confirm:hover { background:rgba(200,80,80,.35); }
+
+    /* ══ TOAST ══ */
+    .toast {
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px);
+      background:rgba(24,12,5,.96); border:1px solid rgba(200,136,42,.38);
+      color:var(--cream); font-size:.9rem; padding:14px 28px;
+      border-radius:var(--radius-btn); z-index:500;
+      transition:transform .35s cubic-bezier(.22,.68,0,1.2);
+      white-space:nowrap; backdrop-filter:blur(16px);
+    }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.error { border-color:rgba(220,80,80,.48); }
+
+    /* ══ LOADER ══ */
+    .loader { display:flex; align-items:center; justify-content:center; min-height:200px; gap:10px; }
+    .loader-dot { width:10px; height:10px; border-radius:50%; background:var(--gold); animation:dp 1.2s ease-in-out infinite; }
+    .loader-dot:nth-child(2) { animation-delay:.2s; background:var(--sand); }
+    .loader-dot:nth-child(3) { animation-delay:.4s; background:var(--gold-light); }
+    @keyframes dp { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1.1);opacity:1} }
+
+    @media (max-width:640px) {
+      .admin-nav { padding:12px 16px; }
+      .form-modal { padding:24px; }
+      th:nth-child(2), td:nth-child(2) { display:none; }
+      #nav-user { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar"></div>
+
+<!-- ══════════════════════════
+     AUTH PAGE
+══════════════════════════ -->
+<div id="auth-page">
+  <div class="auth-card">
+    <!-- Inline logo SVG -->
+    <svg class="auth-logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="62" rx="52" ry="40" fill="#E8C080"/>
+      <ellipse cx="60" cy="75" rx="52" ry="25" fill="#C8882A"/>
+      <ellipse cx="60" cy="85" rx="52" ry="18" fill="#7B3F1A"/>
+      <ellipse cx="60" cy="94" rx="52" ry="12" fill="#4A2010"/>
+      <rect x="8" y="30" width="104" height="44" fill="#FAF0DC" rx="2"/>
+      <ellipse cx="60" cy="62" rx="52" ry="40" fill="none" stroke="#4A2010" stroke-width="2"/>
+      <g fill="#4A2010">
+        <ellipse cx="44" cy="52" rx="5" ry="5"/><rect x="40" y="57" width="8" height="18" rx="3"/>
+        <ellipse cx="76" cy="53" rx="4" ry="4"/><rect x="73" y="57" width="7" height="16" rx="3"/>
+        <ellipse cx="60" cy="55" rx="3.5" ry="3.5"/><rect x="57" y="59" width="6" height="13" rx="2.5"/>
+        <ellipse cx="52" cy="58" rx="3" ry="3"/><rect x="49.5" y="61" width="5" height="11" rx="2"/>
+      </g>
+    </svg>
+
+    <h1>ממשק ניהול</h1>
+    <p>גרעין אהל שלמה – כניסה למנהלים בלבד</p>
+
+    <div class="f-group">
+      <label for="login-email">אימייל</label>
+      <input class="form-input" type="email" id="login-email" placeholder="admin@example.com" autocomplete="email">
+    </div>
+    <div class="f-group">
+      <label for="login-password">סיסמה</label>
+      <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="login-btn">כניסה</button>
+    <p class="auth-error" id="login-error"></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     ADMIN APP
+══════════════════════════ -->
+<div id="admin-app" style="display:none">
+
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <svg class="nav-brand-logo" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="62" rx="52" ry="40" fill="#E8C080"/>
+        <ellipse cx="60" cy="75" rx="52" ry="25" fill="#C8882A"/>
+        <ellipse cx="60" cy="85" rx="52" ry="18" fill="#7B3F1A"/>
+        <ellipse cx="60" cy="94" rx="52" ry="12" fill="#4A2010"/>
+        <rect x="8" y="30" width="104" height="44" fill="#FAF0DC" rx="2"/>
+        <ellipse cx="60" cy="62" rx="52" ry="40" fill="none" stroke="#4A2010" stroke-width="2"/>
+        <g fill="#4A2010">
+          <ellipse cx="44" cy="52" rx="5" ry="5"/><rect x="40" y="57" width="8" height="18" rx="3"/>
+          <ellipse cx="76" cy="53" rx="4" ry="4"/><rect x="73" y="57" width="7" height="16" rx="3"/>
+          <ellipse cx="60" cy="55" rx="3.5" ry="3.5"/><rect x="57" y="59" width="6" height="13" rx="2.5"/>
+        </g>
+      </svg>
+      <div class="nav-brand-text">
+        גרעין אהל שלמה
+        <small>ממשק ניהול</small>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <span id="nav-user"></span>
+      <a class="btn-ghost" href="index.html" target="_blank">צפייה באתר ↗</a>
+      <button class="btn-ghost" id="btn-logout">יציאה</button>
+    </div>
+  </nav>
+
+  <main class="admin-content">
+    <div class="admin-header">
+      <h1>ניהול אירועים <span id="events-count" style="font-size:1rem;color:var(--gold-light);font-weight:400;font-family:var(--font-body)"></span></h1>
+      <button class="btn-new" id="btn-new">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        אירוע חדש
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>תמונה</th>
+            <th>כותרת</th>
+            <th>סיום הרשמה</th>
+            <th>סטטוס</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="events-tbody">
+          <tr><td colspan="5"><div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════════════
+     EVENT FORM MODAL
+══════════════════════════ -->
+<div class="modal-overlay" id="form-modal-overlay" role="dialog" aria-modal="true">
+  <div class="form-modal">
+    <div class="modal-header">
+      <h2 id="form-title">אירוע חדש</h2>
+      <button class="btn-close" id="btn-form-close">✕</button>
+    </div>
+
+    <div class="f-group">
+      <label>כותרת האירוע *</label>
+      <input class="f-input" type="text" id="f-title" placeholder="כותרת האירוע">
+    </div>
+    <div class="f-group">
+      <label>תיאור</label>
+      <textarea class="f-textarea" id="f-desc" placeholder="פרטים, מיקום, תוכן..."></textarea>
+    </div>
+    <div class="f-group">
+      <label>תמונת מודעה</label>
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="upload-input" accept="image/*">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text">גרור תמונה לכאן או לחץ לבחירה<small>JPG, PNG, WebP · מקסימום 5MB</small></div>
+        <img id="upload-preview" alt="תצוגה מקדימה">
+      </div>
+    </div>
+    <div class="f-row">
+      <div class="f-group">
+        <label>מחיר מבוגר (₪)</label>
+        <input class="f-input" type="number" id="f-adult" placeholder="0" min="0" step="0.5">
+      </div>
+      <div class="f-group">
+        <label>מחיר ילד (₪)</label>
+        <input class="f-input" type="number" id="f-child" placeholder="0" min="0" step="0.5">
+      </div>
+    </div>
+    <div class="f-group">
+      <label>קישור לתשלום (פייבוקס / ביט)</label>
+      <input class="f-input" type="url" id="f-link" placeholder="https://paybox.me/...">
+    </div>
+    <div class="f-group">
+      <label>מועד סיום הרשמה</label>
+      <input class="f-input" type="datetime-local" id="f-deadline">
+    </div>
+    <div class="f-footer">
+      <button class="btn-save" id="btn-save">שמור אירוע</button>
+      <button class="btn-cancel" id="btn-form-cancel">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     CONFIRM DELETE
+══════════════════════════ -->
+<div class="confirm-dialog" id="confirm-dialog" role="alertdialog">
+  <div class="confirm-box">
+    <h3>מחיקת אירוע</h3>
+    <p>פעולה זו אינה ניתנת לביטול.<br>האירוע והתמונה יימחקו לצמיתות.</p>
+    <div class="confirm-actions">
+      <button class="btn-del-confirm" id="btn-del-yes">מחק לצמיתות</button>
+      <button class="btn-cancel" id="btn-del-no">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ══════════════════════════════════════════════
+     FIREBASE + ADMIN LOGIC
+══════════════════════════════════════════════ -->
+<script type="module">
+  import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  import {
+    getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc,
+    doc, query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import {
+    getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  /* ── Firebase config ── */
+  const firebaseConfig = {
+    apiKey:            "AIzaSyDXfQR-0pI5uRsSQpwPJ0u3uwJE2paYdEY",
+    authDomain:        "osevents-4fbd2.firebaseapp.com",
+    projectId:         "osevents-4fbd2",
+    storageBucket:     "osevents-4fbd2.firebasestorage.app",
+    messagingSenderId: "1094502920714",
+    appId:             "1:1094502920714:web:35c52532d635e2353c25f3",
+    measurementId:     "G-18Z8BFWKH9"
+  };
+  const app       = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db        = getFirestore(app);
+  const storage   = getStorage(app);
+  const auth      = getAuth(app);
+
+  /* ── DOM ── */
+  const authPage     = document.getElementById('auth-page');
+  const adminApp     = document.getElementById('admin-app');
+  const loginEmail   = document.getElementById('login-email');
+  const loginPass    = document.getElementById('login-password');
+  const loginBtn     = document.getElementById('login-btn');
+  const loginError   = document.getElementById('login-error');
+  const logoutBtn    = document.getElementById('btn-logout');
+  const navUser      = document.getElementById('nav-user');
+  const tbody        = document.getElementById('events-tbody');
+  const countEl      = document.getElementById('events-count');
+  const btnNew       = document.getElementById('btn-new');
+  const formOverlay  = document.getElementById('form-modal-overlay');
+  const formTitle    = document.getElementById('form-title');
+  const btnFormClose = document.getElementById('btn-form-close');
+  const btnFormCan   = document.getElementById('btn-form-cancel');
+  const btnSave      = document.getElementById('btn-save');
+  const uploadInput  = document.getElementById('upload-input');
+  const uploadPrev   = document.getElementById('upload-preview');
+  const uploadArea   = document.getElementById('upload-area');
+  const confirmDlg   = document.getElementById('confirm-dialog');
+  const btnDelYes    = document.getElementById('btn-del-yes');
+  const btnDelNo     = document.getElementById('btn-del-no');
+  const progressBar  = document.getElementById('progress-bar');
+  const toastEl      = document.getElementById('toast');
+
+  let allEvents    = [];
+  let editId       = null;
+  let deleteId     = null;
+  let uploadFile   = null;
+  let existingUrl  = null;
+
+  /* ══════════════════════════
+     AUTH
+  ══════════════════════════ */
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      authPage.style.display = 'none';
+      adminApp.style.display = 'block';
+      navUser.textContent    = user.email;
+      loadEvents();
+    } else {
+      authPage.style.display = 'flex';
+      adminApp.style.display = 'none';
+    }
+  });
+
+  loginBtn.addEventListener('click', async () => {
+    loginError.textContent = '';
+    loginBtn.disabled      = true;
+    loginBtn.textContent   = 'מתחבר...';
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPass.value);
+    } catch(err) {
+      loginError.textContent = authErrMsg(err.code);
+      loginBtn.disabled      = false;
+      loginBtn.textContent   = 'כניסה';
+    }
+  });
+
+  // Allow Enter key in login form
+  [loginEmail, loginPass].forEach(el =>
+    el.addEventListener('keydown', e => { if(e.key==='Enter') loginBtn.click(); })
+  );
+
+  logoutBtn.addEventListener('click', () => signOut(auth));
+
+  function authErrMsg(code) {
+    const m = {
+      'auth/invalid-email':      'כתובת אימייל לא תקינה',
+      'auth/user-not-found':     'משתמש לא קיים',
+      'auth/wrong-password':     'סיסמה שגויה',
+      'auth/invalid-credential': 'פרטי כניסה שגויים',
+      'auth/too-many-requests':  'יותר מדי ניסיונות. נסה מאוחר יותר',
+    };
+    return m[code] || 'שגיאה בהתחברות. בדוק פרטים ונסה שוב.';
+  }
+
+  /* ══════════════════════════
+     LOAD EVENTS
+  ══════════════════════════ */
+  async function loadEvents() {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div></td></tr>`;
+    try {
+      const q    = query(collection(db,'events'), orderBy('createdAt','desc'));
+      const snap = await getDocs(q);
+      allEvents  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderTable();
+    } catch(e) {
+      showToast('שגיאה בטעינה', true);
+      console.error(e);
+    }
+  }
+
+  function getDeadline(ev) {
+    if (!ev.registrationDeadline) return null;
+    return ev.registrationDeadline?.toDate ? ev.registrationDeadline.toDate() : new Date(ev.registrationDeadline);
+  }
+
+  function renderTable() {
+    countEl.textContent = `(${allEvents.length})`;
+    if (!allEvents.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:48px;color:var(--gold-light);opacity:.55">אין אירועים. צור אחד חדש!</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = allEvents.map(ev => {
+      const d      = getDeadline(ev);
+      const closed = d && !isNaN(d) && d <= new Date();
+      const ds     = d && !isNaN(d)
+        ? d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+        : '—';
+      return `<tr>
+        <td>${ev.imageUrl ? `<img class="td-thumb" src="${ev.imageUrl}" alt="${ev.title}">` : '<div class="td-thumb-ph"></div>'}</td>
+        <td style="font-weight:500">${ev.title}</td>
+        <td>${ds}</td>
+        <td>${closed ? '<span class="badge-closed">⛔ סגורה</span>' : '<span class="badge-open">✅ פתוחה</span>'}</td>
+        <td><div class="td-actions">
+          <button class="btn-edit" data-id="${ev.id}">עריכה</button>
+          <button class="btn-del"  data-id="${ev.id}">מחיקה</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-edit').forEach(b => b.onclick = () => openForm(b.dataset.id));
+    tbody.querySelectorAll('.btn-del').forEach(b  => b.onclick = () => openConfirm(b.dataset.id));
+  }
+
+  /* ══════════════════════════
+     FORM OPEN / CLOSE
+  ══════════════════════════ */
+  btnNew.onclick       = () => openForm(null);
+  btnFormClose.onclick = closeForm;
+  btnFormCan.onclick   = closeForm;
+
+  function openForm(id) {
+    editId = id; uploadFile = null; existingUrl = null;
+    document.getElementById('f-title').value    = '';
+    document.getElementById('f-desc').value     = '';
+    document.getElementById('f-adult').value    = '';
+    document.getElementById('f-child').value    = '';
+    document.getElementById('f-link').value     = '';
+    document.getElementById('f-deadline').value = '';
+    uploadPrev.style.display = 'none'; uploadPrev.src = '';
+
+    if (id) {
+      formTitle.textContent = 'עריכת אירוע';
+      const ev = allEvents.find(e => e.id === id);
+      if (ev) {
+        document.getElementById('f-title').value  = ev.title || '';
+        document.getElementById('f-desc').value   = ev.description || '';
+        document.getElementById('f-adult').value  = ev.priceAdult ?? '';
+        document.getElementById('f-child').value  = ev.priceChild ?? '';
+        document.getElementById('f-link').value   = ev.paymentLink || '';
+        const d = getDeadline(ev);
+        if (d && !isNaN(d)) document.getElementById('f-deadline').value = d.toISOString().slice(0,16);
+        if (ev.imageUrl) {
+          existingUrl = ev.imageUrl;
+          uploadPrev.src = ev.imageUrl; uploadPrev.style.display = 'block';
+        }
+      }
+    } else {
+      formTitle.textContent = 'אירוע חדש';
+    }
+    formOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeForm() {
+    formOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+    editId = null; uploadFile = null; existingUrl = null;
+  }
+
+  /* ══════════════════════════
+     IMAGE UPLOAD
+  ══════════════════════════ */
+  uploadInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/'))    { showToast('יש לבחור קובץ תמונה', true); return; }
+    if (file.size > 5 * 1024 * 1024)       { showToast('מקסימום 5MB', true); return; }
+    uploadFile = file;
+    const r = new FileReader();
+    r.onload = ev => { uploadPrev.src = ev.target.result; uploadPrev.style.display = 'block'; };
+    r.readAsDataURL(file);
+  });
+  uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault(); uploadArea.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) {
+      uploadInput.files = e.dataTransfer.files;
+      uploadInput.dispatchEvent(new Event('change'));
+    }
+  });
+
+  /* ══════════════════════════
+     SAVE EVENT
+  ══════════════════════════ */
+  btnSave.onclick = async () => {
+    const title    = document.getElementById('f-title').value.trim();
+    const desc     = document.getElementById('f-desc').value.trim();
+    const adult    = parseFloat(document.getElementById('f-adult').value) || 0;
+    const child    = parseFloat(document.getElementById('f-child').value) || 0;
+    const link     = document.getElementById('f-link').value.trim();
+    const dlRaw    = document.getElementById('f-deadline').value;
+
+    if (!title) { showToast('חובה להזין כותרת', true); return; }
+
+    btnSave.disabled   = true;
+    btnSave.textContent = 'שומר...';
+    progressBar.classList.add('show');
+
+    try {
+      let imageUrl = existingUrl || null;
+      if (uploadFile) {
+        const ext  = uploadFile.name.split('.').pop();
+        const path = `events/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const sRef = ref(storage, path);
+        const snap = await uploadBytes(sRef, uploadFile);
+        imageUrl   = await getDownloadURL(snap.ref);
+      }
+
+      const data = {
+        title, description: desc, priceAdult: adult, priceChild: child,
+        paymentLink: link, imageUrl,
+        registrationDeadline: dlRaw ? new Date(dlRaw) : null,
+        updatedAt: serverTimestamp()
+      };
+
+      if (editId) {
+        await updateDoc(doc(db,'events',editId), data);
+        showToast('✅ האירוע עודכן');
+      } else {
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db,'events'), data);
+        showToast('✅ האירוע נוצר');
+      }
+      closeForm();
+      await loadEvents();
+    } catch(err) {
+      showToast('שגיאה: ' + err.message, true);
+      console.error(err);
+    } finally {
+      btnSave.disabled    = false;
+      btnSave.textContent = 'שמור אירוע';
+      progressBar.classList.remove('show');
+    }
+  };
+
+  /* ══════════════════════════
+     DELETE
+  ══════════════════════════ */
+  function openConfirm(id) {
+    deleteId = id;
+    confirmDlg.classList.add('active');
+  }
+  btnDelNo.onclick  = () => { confirmDlg.classList.remove('active'); deleteId = null; };
+  btnDelYes.onclick = async () => {
+    if (!deleteId) return;
+    progressBar.classList.add('show');
+    try {
+      const ev = allEvents.find(e => e.id === deleteId);
+      if (ev?.imageUrl) {
+        try { await deleteObject(ref(storage, ev.imageUrl)); } catch(_) {}
+      }
+      await deleteDoc(doc(db,'events',deleteId));
+      showToast('🗑️ האירוע נמחק');
+      confirmDlg.classList.remove('active');
+      deleteId = null;
+      await loadEvents();
+    } catch(err) {
+      showToast('שגיאה במחיקה', true);
+      console.error(err);
+    } finally {
+      progressBar.classList.remove('show');
+    }
+  };
+
+  /* ══════════════════════════
+     TOAST
+  ══════════════════════════ */
+  function showToast(msg, isError = false) {
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('error', isError);
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 3400);
+  }
+</script>
+</body>
+</html>
