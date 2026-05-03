@@ -248,15 +248,15 @@
         <div class="sc">
           <div class="sc-title"><span class="ic">🏠</span> כללי</div>
           <div class="fg"><label>שם הארגון</label><input class="fi" id="s-org" placeholder="גרעין אהל שלמה"></div>
-          <div class="fg"><label>לוגו – קישור לתמונה</label><input class="fi" id="s-logo" placeholder="https://..." type="url"></div>
-          <div class="fg"><label>תמונת רקע לדף הבית – קישור</label><input class="fi" id="s-hero" placeholder="https://..." type="url"></div>
+          <div class="fg"><label>לוגו – קישור לתמונה</label><input class="fi" id="s-logo" placeholder="https://..." type="text" inputmode="url"></div>
+          <div class="fg"><label>תמונת רקע לדף הבית – קישור</label><input class="fi" id="s-hero" placeholder="https://..." type="text" inputmode="url"></div>
           <button class="btn-ss" id="save-gen">שמור</button>
         </div>
 
         <div class="sc">
           <div class="sc-title"><span class="ic">📞</span> יצירת קשר</div>
-          <div class="fg"><label>טלפון</label><input class="fi" id="s-phone" placeholder="050-1234567" type="tel"></div>
-          <div class="fg"><label>WhatsApp</label><input class="fi" id="s-wa" placeholder="050-1234567" type="tel"></div>
+          <div class="fg"><label>טלפון</label><input class="fi" id="s-phone" placeholder="050-1234567" type="tel" style="direction:ltr;text-align:right" inputmode="tel"></div>
+          <div class="fg"><label>WhatsApp</label><input class="fi" id="s-wa" placeholder="050-1234567" type="tel" style="direction:ltr;text-align:right" inputmode="tel"></div>
           <button class="btn-ss" id="save-contact">שמור</button>
         </div>
 
@@ -655,10 +655,19 @@
   async function saveSettings(patch){
     showProg(true);
     try{
-      await setDoc(doc(db,'settings','main'),{...settingsData,...patch},{merge:true});
-      settingsData={...settingsData,...patch};
+      // Sanitize: remove empty strings → null so Firestore doesn't store ""
+      const cleaned={};
+      for(const [k,v] of Object.entries(patch)){
+        cleaned[k]=(typeof v==='string'&&v.trim()==='')?null:v;
+      }
+      await setDoc(doc(db,'settings','main'),{...settingsData,...cleaned},{merge:true});
+      settingsData={...settingsData,...cleaned};
       showToast('✅ הגדרות נשמרו');
-    }catch(e){showToast('שגיאה בשמירה',true);console.error(e)}
+    }catch(e){
+      console.error(e);
+      if(e.code==='permission-denied') showToast('שגיאה: אין הרשאה לכתוב להגדרות – בדוק Firestore Rules',true);
+      else showToast('שגיאה בשמירה: '+e.message,true);
+    }
     finally{showProg(false)}
   }
 
