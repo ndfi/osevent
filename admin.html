@@ -242,7 +242,11 @@
 
     <!-- SETTINGS PANEL -->
     <div class="a-panel" id="panel-settings">
-      <div class="top-bar"><h2>הגדרות המערכת</h2></div>
+      <div class="top-bar">
+        <h2>הגדרות המערכת</h2>
+        <button class="btn-o" id="btn-test-db" style="font-size:.8rem">🔍 בדוק חיבור ל-Firestore</button>
+      </div>
+      <div id="db-test-result" style="display:none;margin-bottom:18px;padding:14px 18px;border-radius:10px;font-size:.85rem;font-weight:600;line-height:1.6"></div>
       <div class="settings-grid">
 
         <div class="sc">
@@ -655,21 +659,60 @@
   async function saveSettings(patch){
     showProg(true);
     try{
-      // Sanitize: remove empty strings → null so Firestore doesn't store ""
       const cleaned={};
       for(const [k,v] of Object.entries(patch)){
         cleaned[k]=(typeof v==='string'&&v.trim()==='')?null:v;
       }
+      console.log('[saveSettings] attempting setDoc with:', cleaned);
       await setDoc(doc(db,'settings','main'),{...settingsData,...cleaned},{merge:true});
       settingsData={...settingsData,...cleaned};
       showToast('✅ הגדרות נשמרו');
     }catch(e){
-      console.error(e);
-      if(e.code==='permission-denied') showToast('שגיאה: אין הרשאה לכתוב להגדרות – בדוק Firestore Rules',true);
-      else showToast('שגיאה בשמירה: '+e.message,true);
+      console.error('[saveSettings] FULL ERROR:', e);
+      const msg = e.code==='permission-denied'
+        ? 'שגיאת הרשאות Firestore – בדוק Rules עבור /settings/main'
+        : `שגיאה: ${e.code||''} – ${e.message}`;
+      showToast(msg, true);
     }
     finally{showProg(false)}
   }
+
+  /* ══ CONNECTION TEST ══ */
+  $('btn-test-db').onclick = async () => {
+    const res = $('db-test-result');
+    res.style.display='block';
+    res.style.background='rgba(200,136,42,.07)';
+    res.style.border='1.5px solid rgba(200,136,42,.2)';
+    res.style.color='var(--text-mid)';
+    res.textContent='⏳ בודק חיבור...';
+    const lines=[];
+    // 1. read settings/main
+    try{
+      const s=await getDoc(doc(db,'settings','main'));
+      lines.push('✅ קריאה מ-settings/main: הצליחה' + (s.exists()?' (המסמך קיים)':' (המסמך לא קיים עדיין – ייווצר בשמירה ראשונה)'));
+    }catch(e){
+      lines.push('❌ קריאה מ-settings/main נכשלה: '+e.code+' – '+e.message);
+    }
+    // 2. write test
+    try{
+      await setDoc(doc(db,'settings','main'),{_test:true},{merge:true});
+      lines.push('✅ כתיבה ל-settings/main: הצליחה – Firestore Rules מאפשרים כתיבה');
+      // cleanup
+      await updateDoc(doc(db,'settings','main'),{_test:null}).catch(()=>{});
+    }catch(e){
+      lines.push('❌ כתיבה ל-settings/main נכשלה: '+e.code+' – '+e.message);
+      if(e.code==='permission-denied'){
+        lines.push('');
+        lines.push('🔧 כדי לתקן: פתח Firebase Console → Firestore Database → Rules והוסף:');
+        lines.push('  match /settings/{id} { allow read, write: if request.auth != null; }');
+      }
+    }
+    const ok=lines.every(l=>!l.startsWith('❌'));
+    res.style.background=ok?'rgba(39,174,96,.07)':'rgba(192,57,43,.07)';
+    res.style.border=`1.5px solid ${ok?'rgba(39,174,96,.25)':'rgba(192,57,43,.25)'}`;
+    res.style.color=ok?'var(--success)':'var(--danger)';
+    res.innerHTML=lines.map(l=>`<div>${l}</div>`).join('');
+  };
 
   $('save-gen').onclick   = ()=>saveSettings({orgName:$('s-org').value.trim(),logoUrl:$('s-logo').value.trim(),heroBgUrl:$('s-hero').value.trim()});
   $('save-contact').onclick=()=>saveSettings({phone:$('s-phone').value.trim(),whatsapp:$('s-wa').value.trim()});
