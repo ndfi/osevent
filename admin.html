@@ -325,24 +325,11 @@
       <div class="fg"><label>מחיר מבוגר (₪)</label><input class="fi" type="number" id="f-adult" placeholder="0" min="0" step="0.5"></div>
       <div class="fg"><label>מחיר ילד (₪)</label><input class="fi" type="number" id="f-child" placeholder="0" min="0" step="0.5"></div>
     </div>
+    <div class="fg"><label>הערה למחיר ילד <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(תוצג בסוגריים – לדוגמה: מגיל שנה)</span></label><input class="fi" id="f-child-note" placeholder="מגיל שנה ומעלה"></div>
 
     <div class="fg"><label>מועד סיום הרשמה</label><input class="fi" type="datetime-local" id="f-deadline"></div>
 
-    <!-- Pinned toggle -->
-    <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(200,136,42,.06);border:1.5px solid rgba(200,136,42,.18);border-radius:10px">
-      <input type="checkbox" id="f-pinned" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
-      <label for="f-pinned" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">📌 נעוץ – יופיע ראשון ללא קשר לתאריך ההוספה</label>
-    </div>
-
-    <!-- Google Form -->
-    <div class="fg">
-      <label>קישור לטופס גוגל (הרשמה)</label>
-      <input class="fi" type="text" id="f-form-url" placeholder="https://forms.gle/..." inputmode="url" style="direction:ltr;text-align:right">
-    </div>
-    <div class="fg">
-      <label>תווית כפתור טופס</label>
-      <input class="fi" id="f-form-label" placeholder="להרשמה בטופס גוגל">
-    </div>
+    <!-- Payment buttons – MAX 2 -->
     <div class="fg">
       <label>כפתורי תשלום <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(עד 2 כפתורים)</span></label>
       <div class="pay-builder">
@@ -478,9 +465,8 @@
 
   function openForm(id){
     editId=id; uploadFile=null; existingUrl=null; payRowCount=0;
-    ['f-title','f-desc','f-adult','f-child','f-deadline','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
+    ['f-title','f-desc','f-adult','f-child','f-child-note','f-deadline','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
     $('f-cat').value='events';
-    $('f-pinned').checked=false;
     $('upload-preview').style.display='none';
     $('url-preview').style.display='none';
     $('pay-rows').innerHTML='';
@@ -494,6 +480,7 @@
         $('f-desc').value=ev.description||'';
         $('f-adult').value=ev.priceAdult??'';
         $('f-child').value=ev.priceChild??'';
+        $('f-child-note').value=ev.priceChildNote||'';
         $('f-cat').value=ev.category||'events';
         $('f-pinned').checked=!!ev.pinned;
         $('f-form-url').value=ev.formLink||'';
@@ -591,6 +578,7 @@
     const desc=   $('f-desc').value.trim();
     const adult=  parseFloat($('f-adult').value)||0;
     const child=  parseFloat($('f-child').value)||0;
+    const childNote= $('f-child-note').value.trim()||null;
     const cat=    $('f-cat').value;
     const dlRaw=  $('f-deadline').value;
     const imgUrl= $('f-img-url').value.trim();
@@ -623,7 +611,7 @@
       const paymentButtons = payBtns.slice(1); /* max 1 extra */
 
       const data={
-        title,description:desc,priceAdult:adult,priceChild:child,
+        title,description:desc,priceAdult:adult,priceChild:child,priceChildNote:childNote,
         category:cat,imageUrl,paymentLink,paymentLabel,paymentButtons,
         registrationDeadline:dlRaw?new Date(dlRaw):null,
         pinned, formLink, formLabel,
