@@ -21,8 +21,8 @@
       --r:14px; --rb:50px; --font:'Heebo',sans-serif; --nav-h:64px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{direction:rtl}
-    body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;line-height:1.7}
+    html{direction:rtl;overflow-x:hidden}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;line-height:1.7;overflow-x:hidden}
     a{color:inherit;text-decoration:none} button{font-family:var(--font)}
     ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
 
@@ -89,7 +89,8 @@
     .btn-new:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(200,136,42,.45)}
 
     /* table */
-    .tbl-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+    .tbl-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);max-width:100%}
+    table{width:100%;min-width:0}
     table{width:100%;border-collapse:collapse}
     th{padding:12px 18px;font-size:.72rem;letter-spacing:1.5px;color:var(--text-soft);text-transform:uppercase;text-align:right;background:var(--bg2);font-weight:700}
     td{padding:13px 18px;border-top:1px solid var(--border);font-size:.89rem;color:var(--text);vertical-align:middle}
@@ -518,7 +519,11 @@
         $('f-desc').value=ev.description||'';
         $('f-adult').value=ev.priceAdult??'';
         $('f-child').value=ev.priceChild??'';
+        $('f-child-note').value=ev.priceChildNote||'';
         $('f-cat').value=ev.category||'events';
+        $('f-pinned').checked=!!ev.pinned;
+        $('f-form-url').value=ev.formLink||'';
+        $('f-form-label').value=ev.formLabel||'';
         const d=dl(ev);
         if(d&&!isNaN(d)) $('f-deadline').value=d.toISOString().slice(0,16);
         if(ev.imageUrl){existingUrl=ev.imageUrl;$('upload-preview').src=ev.imageUrl;$('upload-preview').style.display='block'}
@@ -608,14 +613,18 @@
 
   /* ══ SAVE ══ */
   $('btn-save').onclick=async()=>{
-    const title=  $('f-title').value.trim();
-    const desc=   $('f-desc').value.trim();
-    const adult=  parseFloat($('f-adult').value)||0;
-    const child=  parseFloat($('f-child').value)||0;
-    const cat=    $('f-cat').value;
-    const dlRaw=  $('f-deadline').value;
-    const imgUrl= $('f-img-url').value.trim();
-    const useUrl= $('ip-url').classList.contains('on');
+    const title=      $('f-title').value.trim();
+    const desc=       $('f-desc').value.trim();
+    const adult=      parseFloat($('f-adult').value)||0;
+    const child=      parseFloat($('f-child').value)||0;
+    const childNote=  $('f-child-note').value.trim()||null;
+    const cat=        $('f-cat').value;
+    const dlRaw=      $('f-deadline').value;
+    const imgUrl=     $('f-img-url').value.trim();
+    const useUrl=     $('ip-url').classList.contains('on');
+    const pinned=     $('f-pinned').checked;
+    const formLink=   $('f-form-url').value.trim()||null;
+    const formLabel=  $('f-form-label').value.trim()||null;
 
     /* collect pay buttons */
     const rows=[...$('pay-rows').querySelectorAll('.pay-btn-row')];
@@ -636,14 +645,15 @@
         imageUrl=await getDownloadURL(snap.ref);
       }
 
-      const paymentLink  = payBtns[0]?.url   || null;
-      const paymentLabel = payBtns[0]?.label  || null;
-      const paymentButtons = payBtns.slice(1); /* max 1 extra */
+      const paymentLink   = payBtns[0]?.url   || null;
+      const paymentLabel  = payBtns[0]?.label  || null;
+      const paymentButtons= payBtns.slice(1);
 
       const data={
-        title,description:desc,priceAdult:adult,priceChild:child,
-        category:cat,imageUrl,paymentLink,paymentLabel,paymentButtons,
+        title, description:desc, priceAdult:adult, priceChild:child, priceChildNote:childNote,
+        category:cat, imageUrl, paymentLink, paymentLabel, paymentButtons,
         registrationDeadline:dlRaw?new Date(dlRaw):null,
+        pinned, formLink, formLabel,
         updatedAt:serverTimestamp()
       };
 
