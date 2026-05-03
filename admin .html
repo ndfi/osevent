@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ממשק ניהול – גרעין אהל שלמה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg2:#F5EDE2; --bg3:#FBF7F2;
+      --brown-dark:#4A2010; --brown-warm:#B8621E;
+      --gold:#C8882A; --gold-lt:#D4A054; --sand:#E8C080;
+      --text:#2C1A0A; --text-mid:#6B4226; --text-soft:#9A7050;
+      --border:rgba(184,98,30,.14);
+      --shadow:0 2px 16px rgba(74,32,16,.09);
+      --shadow-lg:0 10px 48px rgba(74,32,16,.17);
+      --grad:linear-gradient(135deg,#4A2010,#B8621E 45%,#C8882A 75%,#E8C080);
+      --danger:#c0392b; --success:#27ae60;
+      --r:14px; --rb:50px; --font:'Heebo',sans-serif; --nav-h:64px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{direction:rtl}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;line-height:1.7}
+    a{color:inherit;text-decoration:none} button{font-family:var(--font)}
+    ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+
+    /* ── PROGRESS ── */
+    #prog{height:3px;background:var(--grad);position:fixed;top:0;right:0;left:0;z-index:999;transform:scaleX(0);transform-origin:right;transition:transform .4s}
+    #prog.on{transform:scaleX(1)}
+
+    /* ── AUTH ── */
+    #auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(74,32,16,.07),rgba(184,98,30,.04));padding:24px}
+    .auth-card{background:var(--bg);border:1px solid var(--border);border-radius:22px;padding:48px 40px;width:100%;max-width:420px;text-align:center;box-shadow:var(--shadow-lg)}
+    .auth-logo-wrap{width:76px;height:76px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;margin:0 auto 22px}
+    .auth-card h1{font-size:1.5rem;font-weight:900;color:var(--brown-dark);margin-bottom:6px}
+    .auth-card p{color:var(--text-soft);font-size:.84rem;margin-bottom:28px}
+    .auth-error{color:var(--danger);font-size:.82rem;margin-top:13px;min-height:20px}
+
+    /* ── FORM ELEMENTS ── */
+    .fg{margin-bottom:18px;text-align:right}
+    .fg label{display:block;font-size:.79rem;color:var(--text-soft);font-weight:700;margin-bottom:7px;letter-spacing:.2px}
+    .fi,.fta,.fsel{width:100%;padding:11px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font);font-size:.92rem;outline:none;transition:border-color .22s,background .22s}
+    .fi:focus,.fta:focus,.fsel:focus{border-color:var(--gold);background:#fff}
+    .fi::placeholder,.fta::placeholder{color:rgba(100,70,40,.28)}
+    .fi[type=url],.fi[type=email],.fi[type=password]{direction:ltr;text-align:right}
+    .fta{min-height:110px;resize:vertical}
+    .fsel{cursor:pointer} .fsel option{background:#fff}
+    .frow{display:flex;gap:13px;flex-wrap:wrap} .frow .fg{flex:1;min-width:145px}
+
+    /* ── BUTTONS ── */
+    .btn-p{padding:12px 26px;background:var(--grad);color:var(--brown-dark);font-family:var(--font);font-size:.93rem;font-weight:800;border:none;border-radius:var(--rb);cursor:pointer;transition:all .28s;box-shadow:0 4px 18px rgba(200,136,42,.28)}
+    .btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(200,136,42,.45)}
+    .btn-p:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .btn-p.full{width:100%}
+    .btn-o{padding:10px 20px;background:var(--bg);border:1.5px solid var(--border);color:var(--text-mid);font-family:var(--font);font-size:.85rem;font-weight:600;border-radius:var(--rb);cursor:pointer;transition:all .22s}
+    .btn-o:hover{border-color:var(--gold);color:var(--gold)}
+    .btn-d{padding:9px 18px;background:rgba(192,57,43,.07);border:1.5px solid rgba(192,57,43,.22);color:var(--danger);font-family:var(--font);font-size:.82rem;font-weight:600;border-radius:var(--rb);cursor:pointer;transition:all .22s}
+    .btn-d:hover{background:rgba(192,57,43,.17)}
+    .btn-icon{background:none;border:none;cursor:pointer;font-size:1.05rem;padding:4px 7px;border-radius:8px;transition:background .2s;color:var(--text-soft)}
+    .btn-icon:hover{background:var(--bg2)}
+
+    /* ── ADMIN NAV ── */
+    .admin-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:var(--nav-h);box-shadow:var(--shadow)}
+    .nav-brand{display:flex;align-items:center;gap:11px}
+    .nav-brand-icon{width:38px;height:38px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .nav-brand-text{font-size:.9rem;font-weight:800;color:var(--brown-dark);line-height:1.3}
+    .nav-brand-text small{display:block;font-size:.64rem;color:var(--gold);font-weight:600}
+    .nav-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    #nav-user{font-size:.79rem;color:var(--text-soft)}
+    .btn-nav{padding:7px 14px;border:1.5px solid var(--border);border-radius:var(--rb);font-size:.79rem;font-weight:600;cursor:pointer;background:#fff;color:var(--text-mid);font-family:var(--font);text-decoration:none;display:inline-block;transition:all .22s}
+    .btn-nav:hover{border-color:var(--gold);color:var(--gold)}
+
+    /* ── CONTENT ── */
+    .admin-content{max-width:1080px;margin:0 auto;padding:34px 24px 80px}
+
+    /* admin tabs */
+    .a-tabs{display:flex;gap:2px;margin-bottom:28px;border-bottom:2px solid var(--bg2)}
+    .a-tab{padding:11px 20px;font-size:.88rem;font-weight:700;color:var(--text-soft);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .22s;font-family:var(--font)}
+    .a-tab:hover{color:var(--brown-dark)}
+    .a-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+    .a-panel{display:none} .a-panel.active{display:block}
+
+    /* top bar */
+    .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:12px}
+    .top-bar h2{font-size:1.5rem;font-weight:900;color:var(--brown-dark)}
+    .btn-new{display:flex;align-items:center;gap:8px;padding:11px 22px;background:var(--grad);color:var(--brown-dark);font-family:var(--font);font-size:.88rem;font-weight:800;border:none;border-radius:var(--rb);cursor:pointer;transition:all .28s;box-shadow:0 4px 18px rgba(200,136,42,.28)}
+    .btn-new:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(200,136,42,.45)}
+
+    /* table */
+    .tbl-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+    table{width:100%;border-collapse:collapse}
+    th{padding:12px 18px;font-size:.72rem;letter-spacing:1.5px;color:var(--text-soft);text-transform:uppercase;text-align:right;background:var(--bg2);font-weight:700}
+    td{padding:13px 18px;border-top:1px solid var(--border);font-size:.89rem;color:var(--text);vertical-align:middle}
+    tr:hover td{background:rgba(200,136,42,.03)}
+    .td-thumb{width:52px;height:38px;object-fit:cover;border-radius:7px}
+    .td-ph{width:52px;height:38px;border-radius:7px;background:var(--grad);opacity:.42}
+    .b-open{color:var(--success);font-size:.74rem;font-weight:700}
+    .b-closed{color:var(--danger);font-size:.74rem;font-weight:700}
+    .td-act{display:flex;gap:7px}
+    .btn-edit,.btn-del{padding:6px 13px;border-radius:20px;font-size:.77rem;font-weight:600;cursor:pointer;transition:all .22s;font-family:var(--font);border:1.5px solid}
+    .btn-edit{background:rgba(200,136,42,.07);border-color:rgba(200,136,42,.28);color:var(--gold)}
+    .btn-edit:hover{background:rgba(200,136,42,.18)}
+    .btn-del{background:rgba(192,57,43,.06);border-color:rgba(192,57,43,.22);color:var(--danger)}
+    .btn-del:hover{background:rgba(192,57,43,.16)}
+
+    /* modal overlay */
+    .mo{position:fixed;inset:0;z-index:200;background:rgba(26,14,6,.45);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 20px;opacity:0;pointer-events:none;transition:opacity .28s}
+    .mo.active{opacity:1;pointer-events:all}
+
+    /* form modal */
+    .fm{width:100%;max-width:660px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:38px;box-shadow:var(--shadow-lg);transform:translateY(20px);transition:transform .34s cubic-bezier(.22,.68,0,1.2)}
+    .mo.active .fm{transform:translateY(0)}
+    .fm-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+    .fm-hdr h2{font-size:1.3rem;font-weight:900;color:var(--brown-dark)}
+    .btn-mc{background:var(--bg3);border:1.5px solid var(--border);color:var(--text-soft);width:37px;height:37px;border-radius:50%;font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .22s}
+    .btn-mc:hover{border-color:var(--gold);color:var(--gold)}
+
+    /* image toggle */
+    .img-tgl{display:flex;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:11px}
+    .img-tgl-btn{flex:1;padding:9px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;font-family:var(--font);transition:all .22s;color:var(--text-soft);background:var(--bg3)}
+    .img-tgl-btn.on{background:var(--gold);color:#fff}
+    .img-panel{display:none} .img-panel.on{display:block}
+
+    /* upload area */
+    .upload-area{border:2px dashed rgba(200,136,42,.26);border-radius:var(--r);padding:26px;text-align:center;cursor:pointer;position:relative;transition:all .25s;overflow:hidden}
+    .upload-area:hover,.upload-area.drag-over{border-color:var(--gold);background:rgba(200,136,42,.04)}
+    .upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer}
+    .upload-icon{font-size:1.8rem;margin-bottom:8px}
+    .upload-text{font-size:.84rem;color:var(--text-soft)}
+    .upload-text small{display:block;color:rgba(100,70,40,.38);margin-top:3px;font-size:.71rem}
+    #upload-preview{width:100%;max-height:155px;object-fit:cover;border-radius:9px;margin-top:12px;display:none}
+
+    /* PAY BUTTONS BUILDER – max 2 */
+    .pay-builder{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:6px}
+    .pay-builder-title{font-size:.8rem;font-weight:700;color:var(--text-soft);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .pay-btn-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:9px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px}
+    .pay-btn-row .fg{flex:1;min-width:120px;margin-bottom:0}
+    .btn-add-pay{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;background:rgba(200,136,42,.09);border:1.5px dashed rgba(200,136,42,.32);color:var(--gold);border-radius:var(--r);cursor:pointer;font-size:.82rem;font-weight:700;font-family:var(--font);transition:all .22s;width:100%;margin-top:4px}
+    .btn-add-pay:hover{background:rgba(200,136,42,.18)}
+    .btn-add-pay:disabled{opacity:.38;cursor:not-allowed}
+
+    /* form footer */
+    .ff{display:flex;gap:11px;margin-top:14px}
+
+    /* settings */
+    .settings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:20px}
+    .sc{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:26px;box-shadow:var(--shadow)}
+    .sc-title{font-size:.98rem;font-weight:800;color:var(--brown-dark);margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid var(--bg2);display:flex;align-items:center;gap:8px}
+    .sc-title .ic{font-size:1.15rem}
+    .btn-ss{padding:11px 22px;background:var(--grad);color:var(--brown-dark);font-family:var(--font);font-size:.86rem;font-weight:800;border:none;border-radius:var(--rb);cursor:pointer;transition:all .28s;box-shadow:0 3px 14px rgba(200,136,42,.22)}
+    .btn-ss:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(200,136,42,.38)}
+
+    /* pay items */
+    .pi-list{display:flex;flex-direction:column;gap:9px;margin-bottom:12px}
+    .pi-row{display:flex;gap:6px;align-items:center;background:var(--bg3);border-radius:10px;padding:10px 11px;border:1px solid var(--border);flex-wrap:wrap}
+    .pi-row .fi{padding:7px 10px;font-size:.84rem}
+
+    /* confirm */
+    .cdlg{position:fixed;inset:0;z-index:400;background:rgba(26,14,6,.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:24px}
+    .cdlg.active{opacity:1;pointer-events:all}
+    .cbox{background:var(--bg);border:1.5px solid rgba(192,57,43,.22);border-radius:20px;padding:38px;max-width:370px;text-align:center;box-shadow:var(--shadow-lg)}
+    .cbox h3{font-size:1.2rem;font-weight:900;color:var(--brown-dark);margin-bottom:10px}
+    .cbox p{color:var(--text-soft);font-size:.87rem;margin-bottom:22px}
+    .cact{display:flex;gap:11px;justify-content:center}
+
+    /* loader / toast */
+    .loader{display:flex;align-items:center;justify-content:center;min-height:180px;gap:9px}
+    .ld{width:9px;height:9px;border-radius:50%;background:var(--gold);animation:ldp 1.2s ease-in-out infinite}
+    .ld:nth-child(2){animation-delay:.2s;background:var(--sand)} .ld:nth-child(3){animation-delay:.4s}
+    @keyframes ldp{0%,80%,100%{transform:scale(.6);opacity:.35}40%{transform:scale(1.1);opacity:1}}
+    .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(26,14,6,.94);border:1px solid rgba(200,136,42,.34);color:#fff;font-size:.88rem;font-weight:600;padding:12px 24px;border-radius:var(--rb);z-index:600;transition:transform .34s cubic-bezier(.22,.68,0,1.2);white-space:nowrap;backdrop-filter:blur(16px)}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+    .toast.err{border-color:rgba(192,57,43,.5)}
+
+    @media(max-width:640px){
+      .admin-nav{padding:0 16px} .fm{padding:22px} #nav-user{display:none}
+      .settings-grid{grid-template-columns:1fr}
+      th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){display:none}
+    }
+  </style>
+</head>
+<body>
+<div id="prog"></div>
+
+<!-- ══ AUTH ══ -->
+<div id="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo-wrap">
+      <svg width="38" height="38" viewBox="0 0 60 60" fill="none"><ellipse cx="30" cy="36" rx="26" ry="20" fill="#E8C080"/><ellipse cx="30" cy="43" rx="26" ry="13" fill="#C8882A"/><ellipse cx="30" cy="50" rx="26" ry="8" fill="#7B3F1A"/><rect x="4" y="18" width="52" height="22" fill="#FDF9F4" rx="2"/><g fill="#4A2010"><ellipse cx="22" cy="28" rx="3" ry="3"/><rect x="19" y="31" width="6" height="10" rx="2"/><ellipse cx="38" cy="29" rx="2.5" ry="2.5"/><rect x="36" y="32" width="5" height="9" rx="2"/><ellipse cx="30" cy="30" rx="2" ry="2"/><rect x="28.2" y="32" width="3.5" height="8" rx="1.5"/></g></svg>
+    </div>
+    <h1>ממשק ניהול</h1>
+    <p>גרעין אהל שלמה – כניסה למנהלים בלבד</p>
+    <div class="fg"><label>אימייל</label><input class="fi" type="email" id="login-email" placeholder="admin@example.com" autocomplete="email"></div>
+    <div class="fg"><label>סיסמה</label><input class="fi" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-p full" id="login-btn">כניסה</button>
+    <p class="auth-error" id="login-error"></p>
+  </div>
+</div>
+
+<!-- ══ ADMIN APP ══ -->
+<div id="admin-app" style="display:none">
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <div class="nav-brand-icon"><svg width="20" height="20" viewBox="0 0 60 60" fill="none"><ellipse cx="30" cy="36" rx="26" ry="20" fill="#E8C080"/><ellipse cx="30" cy="43" rx="26" ry="13" fill="#C8882A"/><ellipse cx="30" cy="50" rx="26" ry="8" fill="#7B3F1A"/><rect x="4" y="18" width="52" height="22" fill="#FDF9F4" rx="2"/><g fill="#4A2010"><ellipse cx="22" cy="28" rx="3" ry="3"/><rect x="19" y="31" width="6" height="10" rx="2"/><ellipse cx="38" cy="29" rx="2.5" ry="2.5"/><rect x="36" y="32" width="5" height="9" rx="2"/></g></svg></div>
+      <div class="nav-brand-text">גרעין אהל שלמה<small>ממשק ניהול</small></div>
+    </div>
+    <div class="nav-actions">
+      <span id="nav-user"></span>
+      <a class="btn-nav" href="index.html" target="_blank">צפייה באתר ↗</a>
+      <button class="btn-nav" id="btn-logout">יציאה</button>
+    </div>
+  </nav>
+
+  <main class="admin-content">
+    <div class="a-tabs">
+      <button class="a-tab active" data-panel="events">🗓️ אירועים</button>
+      <button class="a-tab" data-panel="settings">⚙️ הגדרות</button>
+    </div>
+
+    <!-- EVENTS PANEL -->
+    <div class="a-panel active" id="panel-events">
+      <div class="top-bar">
+        <h2>אירועים <span id="ev-count" style="font-size:.95rem;color:var(--text-soft);font-weight:600"></span></h2>
+        <button class="btn-new" id="btn-new">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          אירוע חדש
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>תמונה</th><th>כותרת</th><th>קטגוריה</th><th>סיום הרשמה</th><th>סטטוס</th><th>פעולות</th>
+          </tr></thead>
+          <tbody id="ev-tbody">
+            <tr><td colspan="6"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="a-panel" id="panel-settings">
+      <div class="top-bar"><h2>הגדרות המערכת</h2></div>
+      <div class="settings-grid">
+
+        <div class="sc">
+          <div class="sc-title"><span class="ic">🏠</span> כללי</div>
+          <div class="fg"><label>שם הארגון</label><input class="fi" id="s-org" placeholder="גרעין אהל שלמה"></div>
+          <div class="fg"><label>לוגו – קישור לתמונה</label><input class="fi" id="s-logo" placeholder="https://..." type="text" inputmode="url"></div>
+          <div class="fg"><label>תמונת רקע לדף הבית – קישור</label><input class="fi" id="s-hero" placeholder="https://..." type="text" inputmode="url"></div>
+          <button class="btn-ss" id="save-gen">שמור</button>
+        </div>
+
+        <div class="sc">
+          <div class="sc-title"><span class="ic">📞</span> יצירת קשר</div>
+          <div class="fg"><label>טלפון</label><input class="fi" id="s-phone" placeholder="050-1234567" type="tel" style="direction:ltr;text-align:right" inputmode="tel"></div>
+          <div class="fg"><label>WhatsApp</label><input class="fi" id="s-wa" placeholder="050-1234567" type="tel" style="direction:ltr;text-align:right" inputmode="tel"></div>
+          <button class="btn-ss" id="save-contact">שמור</button>
+        </div>
+
+        <div class="sc">
+          <div class="sc-title"><span class="ic">🎠</span> פריטי משחקייה</div>
+          <div class="pi-list" id="pi-play"></div>
+          <button class="btn-add-pay" id="add-play">+ הוסף פריט</button>
+          <button class="btn-ss" id="save-play" style="margin-top:16px">שמור</button>
+        </div>
+
+        <div class="sc">
+          <div class="sc-title"><span class="ic">🎨</span> פריטי חוגים</div>
+          <div class="pi-list" id="pi-class"></div>
+          <button class="btn-add-pay" id="add-class">+ הוסף פריט</button>
+          <button class="btn-ss" id="save-class" style="margin-top:16px">שמור</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- EVENT FORM MODAL -->
+<div class="mo" id="form-mo">
+  <div class="fm">
+    <div class="fm-hdr">
+      <h2 id="fm-title">אירוע חדש</h2>
+      <button class="btn-mc" id="btn-mc">✕</button>
+    </div>
+
+    <div class="fg"><label>כותרת *</label><input class="fi" id="f-title" placeholder="כותרת האירוע"></div>
+    <div class="fg"><label>תיאור</label><textarea class="fta" id="f-desc" placeholder="פרטים, מיקום, תוכן..."></textarea></div>
+
+    <!-- Image: file or URL -->
+    <div class="fg">
+      <label>תמונת מודעה</label>
+      <div class="img-tgl">
+        <button class="img-tgl-btn on" id="tg-up"  onclick="setImgMode('up')">📁 קובץ</button>
+        <button class="img-tgl-btn"    id="tg-url" onclick="setImgMode('url')">🔗 קישור URL</button>
+      </div>
+      <div class="img-panel on" id="ip-up">
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="upload-input" accept="image/*">
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">גרור תמונה לכאן או לחץ לבחירה<small>JPG · PNG · WebP · מקסימום 5MB</small></div>
+          <img id="upload-preview" alt="">
+        </div>
+      </div>
+      <div class="img-panel" id="ip-url">
+        <input class="fi" type="url" id="f-img-url" placeholder="https://example.com/image.jpg">
+        <img id="url-preview" src="" alt="" style="width:100%;max-height:150px;object-fit:cover;border-radius:9px;margin-top:10px;display:none">
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div class="fg">
+      <label>קטגוריה</label>
+      <select class="fsel" id="f-cat">
+        <option value="events">🗓️ במעגל השנה (כללי)</option>
+        <option value="playground">🎠 משחקייה</option>
+        <option value="classes">🎨 חוגים</option>
+      </select>
+    </div>
+
+    <div class="frow">
+      <div class="fg"><label>מחיר מבוגר (₪)</label><input class="fi" type="number" id="f-adult" placeholder="0" min="0" step="0.5"></div>
+      <div class="fg"><label>מחיר ילד (₪)</label><input class="fi" type="number" id="f-child" placeholder="0" min="0" step="0.5"></div>
+    </div>
+
+    <div class="fg"><label>מועד סיום הרשמה</label><input class="fi" type="datetime-local" id="f-deadline"></div>
+
+    <!-- Payment buttons – MAX 2 -->
+    <div class="fg">
+      <label>כפתורי תשלום <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(עד 2 כפתורים)</span></label>
+      <div class="pay-builder">
+        <div class="pay-builder-title">💳 כפתור ראשי יוצג בגדול, כפתור שני – קו מתאר</div>
+        <div id="pay-rows"></div>
+        <button class="btn-add-pay" id="btn-add-pay">+ הוסף כפתור תשלום</button>
+      </div>
+    </div>
+
+    <div class="ff">
+      <button class="btn-p" id="btn-save">שמור אירוע</button>
+      <button class="btn-o" id="btn-fcan">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="cdlg" id="cdlg">
+  <div class="cbox">
+    <h3>מחיקת אירוע</h3>
+    <p>פעולה זו אינה ניתנת לביטול. האירוע יימחק לצמיתות.</p>
+    <div class="cact">
+      <button class="btn-d" style="padding:11px 22px" id="btn-del-yes">מחק לצמיתות</button>
+      <button class="btn-o" id="btn-del-no">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════
+     FIREBASE + LOGIC
+══════════════════════════════════ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, query, orderBy, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const FB = {
+    apiKey:"AIzaSyDXfQR-0pI5uRsSQpwPJ0u3uwJE2paYdEY",
+    authDomain:"osevents-4fbd2.firebaseapp.com",
+    projectId:"osevents-4fbd2",
+    storageBucket:"osevents-4fbd2.firebasestorage.app",
+    messagingSenderId:"1094502920714",
+    appId:"1:1094502920714:web:35c52532d635e2353c25f3",
+    measurementId:"G-18Z8BFWKH9"
+  };
+  const app     = initializeApp(FB);
+  getAnalytics(app);
+  const db      = getFirestore(app);
+  const storage = getStorage(app);
+  const auth    = getAuth(app);
+
+  /* ── DOM ── */
+  const $ = id => document.getElementById(id);
+  const authPage  = $('auth-page'), adminApp = $('admin-app');
+  const loginBtn  = $('login-btn'), loginError = $('login-error');
+  const logoutBtn = $('btn-logout'), navUser = $('nav-user');
+  const tbody     = $('ev-tbody'), countEl = $('ev-count');
+  const prog      = $('prog'), toastEl = $('toast');
+  const formMo    = $('form-mo');
+  const cdlg      = $('cdlg');
+
+  let allEvents = [], editId = null, deleteId = null, uploadFile = null, existingUrl = null;
+  let payRowCount = 0;
+  let settingsData = {};
+
+  /* ══ AUTH ══ */
+  onAuthStateChanged(auth, u => {
+    if (u) { authPage.style.display='none'; adminApp.style.display='block'; navUser.textContent=u.email; loadEvents(); loadSettings(); }
+    else   { authPage.style.display='flex'; adminApp.style.display='none'; }
+  });
+
+  loginBtn.onclick = async () => {
+    loginError.textContent=''; loginBtn.disabled=true; loginBtn.textContent='מתחבר...';
+    try { await signInWithEmailAndPassword(auth, $('login-email').value.trim(), $('login-pass').value); }
+    catch(e) { loginError.textContent=errMsg(e.code); loginBtn.disabled=false; loginBtn.textContent='כניסה'; }
+  };
+  [$('login-email'),$('login-pass')].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')loginBtn.click()}));
+  logoutBtn.onclick = () => signOut(auth);
+  function errMsg(c){return({'auth/invalid-email':'אימייל לא תקין','auth/user-not-found':'משתמש לא קיים','auth/wrong-password':'סיסמה שגויה','auth/invalid-credential':'פרטים שגויים','auth/too-many-requests':'יותר מדי ניסיונות'})[c]||'שגיאה בהתחברות'}
+
+  /* ══ ADMIN TABS ══ */
+  document.querySelectorAll('.a-tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.a-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.a-panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    $('panel-'+t.dataset.panel).classList.add('active');
+  }));
+
+  /* ══ EVENTS ══ */
+  async function loadEvents() {
+    tbody.innerHTML=`<tr><td colspan="6"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>`;
+    try {
+      const q=query(collection(db,'events'),orderBy('createdAt','desc'));
+      const s=await getDocs(q);
+      allEvents=s.docs.map(d=>({id:d.id,...d.data()}));
+      renderTable();
+    } catch(e){showToast('שגיאה בטעינה',true);console.error(e)}
+  }
+
+  const CAT_LBL={events:'במעגל השנה',playground:'משחקייה',classes:'חוגים'};
+  function dl(ev){if(!ev.registrationDeadline)return null;return ev.registrationDeadline?.toDate?ev.registrationDeadline.toDate():new Date(ev.registrationDeadline)}
+
+  function renderTable(){
+    countEl.textContent=`(${allEvents.length})`;
+    if(!allEvents.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:48px;color:var(--text-soft)">אין אירועים. צור אחד חדש!</td></tr>';return}
+    tbody.innerHTML=allEvents.map(ev=>{
+      const d=dl(ev), closed=d&&!isNaN(d)&&d<=new Date();
+      const ds=d&&!isNaN(d)?d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      return `<tr>
+        <td>${ev.imageUrl?`<img class="td-thumb" src="${ev.imageUrl}" alt="${ev.title}">`:'<div class="td-ph"></div>'}</td>
+        <td style="font-weight:700">${ev.title}</td>
+        <td style="font-size:.82rem;color:var(--text-soft)">${CAT_LBL[ev.category||'events']||'—'}</td>
+        <td style="font-size:.82rem">${ds}</td>
+        <td>${closed?'<span class="b-closed">⛔ סגורה</span>':'<span class="b-open">✅ פתוחה</span>'}</td>
+        <td><div class="td-act"><button class="btn-edit" data-id="${ev.id}">עריכה</button><button class="btn-del" data-id="${ev.id}">מחיקה</button></div></td>
+      </tr>`;
+    }).join('');
+    tbody.querySelectorAll('.btn-edit').forEach(b=>b.onclick=()=>openForm(b.dataset.id));
+    tbody.querySelectorAll('.btn-del').forEach(b=>b.onclick=()=>openConfirm(b.dataset.id));
+  }
+
+  /* ══ FORM ══ */
+  $('btn-new').onclick = () => openForm(null);
+  $('btn-mc').onclick  = closeForm;
+  $('btn-fcan').onclick= closeForm;
+
+  function openForm(id){
+    editId=id; uploadFile=null; existingUrl=null; payRowCount=0;
+    ['f-title','f-desc','f-adult','f-child','f-deadline','f-img-url'].forEach(i=>{const el=$(i);if(el)el.value=''});
+    $('f-cat').value='events';
+    $('upload-preview').style.display='none';
+    $('url-preview').style.display='none';
+    $('pay-rows').innerHTML='';
+    setImgMode('up');
+
+    if(id){
+      $('fm-title').textContent='עריכת אירוע';
+      const ev=allEvents.find(e=>e.id===id);
+      if(ev){
+        $('f-title').value=ev.title||'';
+        $('f-desc').value=ev.description||'';
+        $('f-adult').value=ev.priceAdult??'';
+        $('f-child').value=ev.priceChild??'';
+        $('f-cat').value=ev.category||'events';
+        const d=dl(ev);
+        if(d&&!isNaN(d)) $('f-deadline').value=d.toISOString().slice(0,16);
+        if(ev.imageUrl){existingUrl=ev.imageUrl;$('upload-preview').src=ev.imageUrl;$('upload-preview').style.display='block'}
+        /* load existing pay buttons (max 2) */
+        const existing=[];
+        if(ev.paymentLink) existing.push({label:ev.paymentLabel||'לתשלום מאובטח',url:ev.paymentLink});
+        if(ev.paymentButtons) ev.paymentButtons.slice(0,2-existing.length).forEach(b=>existing.push(b));
+        existing.slice(0,2).forEach(b=>addPayRow(b.label,b.url));
+      }
+    } else {
+      $('fm-title').textContent='אירוע חדש';
+      addPayRow('לתשלום מאובטח','');
+    }
+
+    formMo.classList.add('active');
+    document.body.style.overflow='hidden';
+    updateAddPayBtn();
+  }
+
+  function closeForm(){formMo.classList.remove('active');document.body.style.overflow='';editId=null;uploadFile=null;existingUrl=null}
+
+  /* Image mode toggle */
+  window.setImgMode=function(mode){
+    $('tg-up').classList.toggle('on',  mode==='up');
+    $('tg-url').classList.toggle('on', mode==='url');
+    $('ip-up').classList.toggle('on',  mode==='up');
+    $('ip-url').classList.toggle('on', mode==='url');
+  };
+  $('f-img-url').addEventListener('input',function(){
+    const p=$('url-preview');
+    if(this.value){p.src=this.value;p.style.display='block';p.onerror=()=>p.style.display='none'}
+    else p.style.display='none';
+  });
+
+  /* Upload */
+  const uploadInput=$('upload-input'), uploadArea=$('upload-area'), uploadPrev=$('upload-preview');
+  uploadInput.addEventListener('change',e=>{
+    const f=e.target.files[0];
+    if(!f)return;
+    if(!f.type.startsWith('image/')){showToast('יש לבחור קובץ תמונה',true);return}
+    if(f.size>5*1024*1024){showToast('מקסימום 5MB',true);return}
+    uploadFile=f;
+    const r=new FileReader();r.onload=ev=>{uploadPrev.src=ev.target.result;uploadPrev.style.display='block'};r.readAsDataURL(f);
+  });
+  uploadArea.addEventListener('dragover',e=>{e.preventDefault();uploadArea.classList.add('drag-over')});
+  uploadArea.addEventListener('dragleave',()=>uploadArea.classList.remove('drag-over'));
+  uploadArea.addEventListener('drop',e=>{
+    e.preventDefault();uploadArea.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]){uploadInput.files=e.dataTransfer.files;uploadInput.dispatchEvent(new Event('change'))}
+  });
+
+  /* Pay rows – MAX 2 */
+  $('btn-add-pay').onclick=()=>{ if(payRowCount<2) addPayRow('',''); };
+
+  function addPayRow(label='',url=''){
+    if(payRowCount>=2) return;
+    const idx=payRowCount++;
+    const isSecond=idx===1;
+    const row=document.createElement('div');
+    row.className='pay-btn-row'; row.dataset.idx=idx;
+    row.innerHTML=`
+      <div class="fg" style="flex:1.2"><label style="font-size:.75rem">${isSecond?'כפתור שני – תווית':'כפתור ראשי – תווית'}</label><input class="fi" id="pl-${idx}" value="${label}" placeholder="${isSecond?'לדוגמה: תשלום בביט':'לתשלום מאובטח'}"></div>
+      <div class="fg" style="flex:2"><label style="font-size:.75rem">קישור תשלום</label><input class="fi" id="pu-${idx}" value="${url}" placeholder="https://paybox.me/..." type="url" style="direction:ltr;text-align:right"></div>
+      <button class="btn-icon" onclick="removePayRow(this)" title="הסר">🗑️</button>`;
+    $('pay-rows').appendChild(row);
+    updateAddPayBtn();
+  }
+
+  window.removePayRow=function(btn){
+    btn.closest('.pay-btn-row').remove();
+    payRowCount--;
+    /* Re-index labels */
+    document.querySelectorAll('#pay-rows .pay-btn-row').forEach((r,i)=>{
+      r.dataset.idx=i;
+      const labelEl=r.querySelector('label');
+      if(labelEl) labelEl.textContent=i===0?'כפתור ראשי – תווית':'כפתור שני – תווית';
+    });
+    payRowCount=document.querySelectorAll('#pay-rows .pay-btn-row').length;
+    updateAddPayBtn();
+  };
+
+  function updateAddPayBtn(){
+    const btn=$('btn-add-pay');
+    btn.disabled=payRowCount>=2;
+    btn.textContent=payRowCount>=2?'הגעת למקסימום 2 כפתורים':'+ הוסף כפתור תשלום';
+  }
+
+  /* ══ SAVE ══ */
+  $('btn-save').onclick=async()=>{
+    const title=  $('f-title').value.trim();
+    const desc=   $('f-desc').value.trim();
+    const adult=  parseFloat($('f-adult').value)||0;
+    const child=  parseFloat($('f-child').value)||0;
+    const cat=    $('f-cat').value;
+    const dlRaw=  $('f-deadline').value;
+    const imgUrl= $('f-img-url').value.trim();
+    const useUrl= $('ip-url').classList.contains('on');
+
+    /* collect pay buttons */
+    const rows=[...$('pay-rows').querySelectorAll('.pay-btn-row')];
+    const payBtns=rows.map(r=>{const i=r.dataset.idx;return{label:$(`pl-${i}`)?.value||'',url:$(`pu-${i}`)?.value||''}}).filter(b=>b.url).slice(0,2);
+
+    if(!title){showToast('חובה להזין כותרת',true);return}
+
+    const btn=$('btn-save');
+    btn.disabled=true;btn.textContent='שומר...';showProg(true);
+
+    try{
+      let imageUrl=existingUrl||null;
+      if(useUrl&&imgUrl) imageUrl=imgUrl;
+      else if(uploadFile){
+        const ext=uploadFile.name.split('.').pop();
+        const sRef=ref(storage,`events/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`);
+        const snap=await uploadBytes(sRef,uploadFile);
+        imageUrl=await getDownloadURL(snap.ref);
+      }
+
+      const paymentLink  = payBtns[0]?.url   || null;
+      const paymentLabel = payBtns[0]?.label  || null;
+      const paymentButtons = payBtns.slice(1); /* max 1 extra */
+
+      const data={
+        title,description:desc,priceAdult:adult,priceChild:child,
+        category:cat,imageUrl,paymentLink,paymentLabel,paymentButtons,
+        registrationDeadline:dlRaw?new Date(dlRaw):null,
+        updatedAt:serverTimestamp()
+      };
+
+      if(editId){ await updateDoc(doc(db,'events',editId),data); showToast('✅ האירוע עודכן'); }
+      else       { data.createdAt=serverTimestamp(); await addDoc(collection(db,'events'),data); showToast('✅ האירוע נוצר'); }
+
+      closeForm(); await loadEvents();
+    }catch(e){showToast('שגיאה: '+e.message,true);console.error(e)}
+    finally{btn.disabled=false;btn.textContent='שמור אירוע';showProg(false)}
+  };
+
+  /* ══ DELETE ══ */
+  function openConfirm(id){deleteId=id;cdlg.classList.add('active')}
+  $('btn-del-no').onclick=()=>{cdlg.classList.remove('active');deleteId=null};
+  $('btn-del-yes').onclick=async()=>{
+    if(!deleteId)return; showProg(true);
+    try{
+      const ev=allEvents.find(e=>e.id===deleteId);
+      if(ev?.imageUrl&&ev.imageUrl.includes('firebasestorage')){
+        try{await deleteObject(ref(storage,ev.imageUrl))}catch(_){}
+      }
+      await deleteDoc(doc(db,'events',deleteId));
+      showToast('🗑️ האירוע נמחק'); cdlg.classList.remove('active'); deleteId=null;
+      await loadEvents();
+    }catch(e){showToast('שגיאה במחיקה',true);console.error(e)}
+    finally{showProg(false)}
+  };
+
+  /* ══ SETTINGS ══ */
+  async function loadSettings(){
+    try{
+      const s=await getDoc(doc(db,'settings','main'));
+      if(s.exists()){settingsData=s.data();applySettingsUI()}
+    }catch(e){console.warn(e)}
+  }
+
+  function applySettingsUI(){
+    const s=settingsData;
+    if(s.orgName)  $('s-org').value  =s.orgName;
+    if(s.logoUrl)  $('s-logo').value =s.logoUrl;
+    if(s.heroBgUrl)$('s-hero').value =s.heroBgUrl;
+    if(s.phone)    $('s-phone').value=s.phone;
+    if(s.whatsapp) $('s-wa').value   =s.whatsapp;
+    renderPiList('pi-play',  s.playgroundItems||[]);
+    renderPiList('pi-class', s.classItems||[]);
+  }
+
+  async function saveSettings(patch){
+    showProg(true);
+    try{
+      // Sanitize: remove empty strings → null so Firestore doesn't store ""
+      const cleaned={};
+      for(const [k,v] of Object.entries(patch)){
+        cleaned[k]=(typeof v==='string'&&v.trim()==='')?null:v;
+      }
+      await setDoc(doc(db,'settings','main'),{...settingsData,...cleaned},{merge:true});
+      settingsData={...settingsData,...cleaned};
+      showToast('✅ הגדרות נשמרו');
+    }catch(e){
+      console.error(e);
+      if(e.code==='permission-denied') showToast('שגיאה: אין הרשאה לכתוב להגדרות – בדוק Firestore Rules',true);
+      else showToast('שגיאה בשמירה: '+e.message,true);
+    }
+    finally{showProg(false)}
+  }
+
+  $('save-gen').onclick   = ()=>saveSettings({orgName:$('s-org').value.trim(),logoUrl:$('s-logo').value.trim(),heroBgUrl:$('s-hero').value.trim()});
+  $('save-contact').onclick=()=>saveSettings({phone:$('s-phone').value.trim(),whatsapp:$('s-wa').value.trim()});
+  $('save-play').onclick  = ()=>saveSettings({playgroundItems:collectPi('pi-play')});
+  $('save-class').onclick = ()=>saveSettings({classItems:collectPi('pi-class')});
+  $('add-play').onclick   = ()=>addPiRow('pi-play');
+  $('add-class').onclick  = ()=>addPiRow('pi-class');
+
+  function renderPiList(cid,items){const el=$(cid);el.innerHTML='';items.forEach(it=>addPiRow(cid,it.icon||'',it.title||'',it.price||'',it.desc||'',it.link||''))}
+  function addPiRow(cid,icon='',title='',price='',desc='',link=''){
+    const el=$(cid),row=document.createElement('div');row.className='pi-row';
+    row.innerHTML=`<input class="fi" style="width:40px;padding:7px 8px;text-align:center" value="${icon}" placeholder="🎠" data-f="icon"><input class="fi" style="flex:2" value="${title}" placeholder="שם הפריט" data-f="title"><input class="fi" style="width:68px" value="${price}" placeholder="₪" type="number" data-f="price"><input class="fi" style="flex:1.5" value="${desc}" placeholder="תיאור" data-f="desc"><input class="fi" style="flex:2;direction:ltr;text-align:right" value="${link}" placeholder="https://..." type="url" data-f="link"><button class="btn-icon" onclick="this.closest('.pi-row').remove()">🗑️</button>`;
+    el.appendChild(row);
+  }
+  function collectPi(cid){return[...$( cid).querySelectorAll('.pi-row')].map(r=>({icon:r.querySelector('[data-f=icon]').value,title:r.querySelector('[data-f=title]').value,price:r.querySelector('[data-f=price]').value,desc:r.querySelector('[data-f=desc]').value,link:r.querySelector('[data-f=link]').value})).filter(i=>i.title)}
+
+  /* ══ UTILS ══ */
+  function showToast(msg,isErr=false){toastEl.textContent=msg;toastEl.classList.toggle('err',isErr);toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),3400)}
+  function showProg(on){prog.classList.toggle('on',on)}
+</script>
+</body>
+</html>
