@@ -259,7 +259,7 @@
     .modal-sheet.active .modal-inner { transform: translateY(0); }
 
     .d-hero { height: 380px; position: relative; overflow: hidden; }
-    .d-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; filter: brightness(.46) saturate(1.3); }
+    .d-hero img { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; filter: brightness(.46) saturate(1.3); display: block; }
     .d-hero-plain { height: 380px; background: var(--grad); }
     .d-overlay { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(26,14,6,.15) 0%,rgba(26,14,6,.9) 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 40px 36px; }
     .d-title { font-size: clamp(1.7rem,4vw,2.6rem); font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 3px 16px rgba(26,14,6,.7); }
@@ -305,7 +305,19 @@
     .btn-pay.alt:hover { background: rgba(200,136,42,.07); box-shadow: 0 6px 22px rgba(200,136,42,.32); }
     .btn-pay.disabled { background: rgba(180,160,130,.26); color: rgba(100,80,50,.38); box-shadow: none; pointer-events: none; }
 
-    /* poster */
+    /* pinned badge on card */
+    .card-pinned-badge { position: absolute; top: 10px; right: 10px; font-size: .67rem; font-weight: 800; color: #fff; background: rgba(74,32,16,.88); padding: 4px 10px; border-radius: 20px; display:flex;align-items:center;gap:4px; }
+    .event-card.pinned { border-color: rgba(200,136,42,.5); box-shadow: 0 4px 22px rgba(200,136,42,.22); }
+
+    /* Hebrew date bar in detail modal */
+    .d-heb-date { display:flex; align-items:center; gap:10px; padding: 9px 36px; background: rgba(200,136,42,.07); border-bottom: 1px solid rgba(200,136,42,.14); font-size:.78rem; color:var(--text-soft); font-weight:600; }
+    .d-heb-date .sep { color:var(--border-); opacity:.5; }
+    @media(max-width:900px){ .d-heb-date { padding: 9px 20px; } }
+
+    /* Google Form button */
+    .btn-form { display:flex; align-items:center; justify-content:center; gap:9px; padding:14px 28px; background:#fff; border:2px solid #4285f4; color:#4285f4; font-weight:800; font-size:.97rem; font-family:var(--font); border-radius:var(--rb); cursor:pointer; transition:all .28s; text-decoration:none; margin-bottom:11px; }
+    .btn-form:hover { background:#4285f4; color:#fff; transform:translateY(-2px); box-shadow:0 6px 22px rgba(66,133,244,.32); }
+    .btn-form.disabled { opacity:.4; pointer-events:none; }
     .poster-wrap { padding: 0 36px 36px; }
     .poster-label { font-size: .72rem; color: var(--text-soft); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
     .poster-thumb { border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); cursor: zoom-in; transition: all .28s; }
@@ -603,7 +615,13 @@
   function isClosed(ev) { const d=deadline(ev); return d&&!isNaN(d)&&d<=new Date(); }
 
   function renderCards(cat) {
-    const list = cat==='all' ? allEvents : allEvents.filter(ev=>(ev.category||'events')===cat);
+    let list = cat==='all' ? allEvents : allEvents.filter(ev=>(ev.category||'events')===cat);
+    // pinned first, then by createdAt desc
+    list = [...list].sort((a,b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return 0;
+    });
     eventsCount.textContent = list.length;
     if (!list.length) { eventsGrid.innerHTML='<div class="empty"><div class="empty-icon">🗓️</div><p>אין אירועים בקטגוריה זו</p></div>'; return; }
     eventsGrid.innerHTML = list.map(ev => {
@@ -612,9 +630,10 @@
       const cl = isClosed(ev);
       const ck = ev.category||'events';
       return `
-      <article class="event-card" data-id="${ev.id}" role="button" tabindex="0">
+      <article class="event-card${ev.pinned?' pinned':''}" data-id="${ev.id}" role="button" tabindex="0">
         <div class="card-img">
           ${ev.imageUrl ? `<img src="${ev.imageUrl}" alt="${ev.title}" loading="lazy">` : `<div class="card-ph"><svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(200,136,42,.4)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`}
+          ${ev.pinned ? '<span class="card-pinned-badge">📌 נעוץ</span>' : ''}
           <span class="card-cat-badge" style="background:${CAT_COLOR[ck]||CAT_COLOR.events}">${CAT_LABEL[ck]||ck}</span>
           ${cl ? '<span class="card-closed">⛔ הרשמה סגורה</span>' : ''}
         </div>
@@ -631,8 +650,19 @@
     document.querySelectorAll('.event-card').forEach(c=>c.addEventListener('click',()=>openDetail(c.dataset.id)));
   }
 
+  /* ── Hebrew date helper ── */
+  async function fetchHebDate() {
+    try {
+      const now = new Date();
+      const url = `https://www.hebcal.com/converter?cfg=json&gy=${now.getFullYear()}&gm=${now.getMonth()+1}&gd=${now.getDate()}&g2h=1`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return data.hebrew || '';
+    } catch(e) { return ''; }
+  }
+
   /* ── DETAIL ── */
-  function openDetail(id) {
+  async function openDetail(id) {
     const ev = allEvents.find(e=>e.id===id);
     if (!ev) return;
     clearInterval(cdInterval);
@@ -643,7 +673,7 @@
     const btns = [];
     if (ev.paymentLink)  btns.push({label:ev.paymentLabel||'לתשלום מאובטח', url:ev.paymentLink, alt:false});
     if (ev.paymentButtons?.length) {
-      const extra = ev.paymentButtons.slice(0, 2 - btns.length); // enforce max 2 total
+      const extra = ev.paymentButtons.slice(0, 2 - btns.length);
       extra.forEach(b => btns.push({label:b.label||'תשלום נוסף', url:b.url, alt:true}));
     }
 
@@ -653,6 +683,21 @@
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
         ${b.label}
       </a>`).join('')}</div>` : '';
+
+    /* Google Form button */
+    const formHTML = ev.formLink ? `
+      <a class="btn-form ${cl?'disabled':''}" href="${cl?'#':ev.formLink}" target="${cl?'_self':'_blank'}" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        ${ev.formLabel||'להרשמה בטופס גוגל'}
+      </a>` : '';
+
+    /* Today in Hebrew + Gregorian */
+    const todayHeb = await fetchHebDate();
+    const todayGreg = new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const hebBar = `<div class="d-heb-date">
+      <span>📅 היום: ${todayGreg}</span>
+      ${todayHeb ? `<span style="opacity:.4">|</span><span dir="rtl">🕍 ${todayHeb}</span>` : ''}
+    </div>`;
 
     modalInner.innerHTML = `
       <button class="btn-close-modal" id="btn-close">✕</button>
@@ -666,6 +711,7 @@
           </div>
         </div>
       </div>
+      ${hebBar}
       <div class="d-body">
         ${ev.description ? `<p class="d-desc">${ev.description}</p>` : ''}
         <div class="cd-box">
@@ -686,6 +732,7 @@
           </div>
           <div class="calc-total"><span class="calc-total-label">סה"כ לתשלום</span><span class="calc-total-amt">₪<span id="tot">0</span></span></div>
         </div>
+        ${formHTML}
         ${payHTML}
       </div>
       ${ev.imageUrl ? `<div class="poster-wrap"><p class="poster-label">🖼️ מודעת האירוע</p><div class="poster-thumb" id="poster-thumb"><img src="${ev.imageUrl}" alt="מודעת ${ev.title}"></div></div>` : ''}`;

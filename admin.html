@@ -242,25 +242,21 @@
 
     <!-- SETTINGS PANEL -->
     <div class="a-panel" id="panel-settings">
-      <div class="top-bar">
-        <h2>הגדרות המערכת</h2>
-        <button class="btn-o" id="btn-test-db" style="font-size:.8rem">🔍 בדוק חיבור ל-Firestore</button>
-      </div>
-      <div id="db-test-result" style="display:none;margin-bottom:18px;padding:14px 18px;border-radius:10px;font-size:.85rem;font-weight:600;line-height:1.6"></div>
+      <div class="top-bar"><h2>הגדרות המערכת</h2></div>
       <div class="settings-grid">
 
         <div class="sc">
           <div class="sc-title"><span class="ic">🏠</span> כללי</div>
           <div class="fg"><label>שם הארגון</label><input class="fi" id="s-org" placeholder="גרעין אהל שלמה"></div>
-          <div class="fg"><label>לוגו – קישור לתמונה</label><input class="fi" id="s-logo" placeholder="https://..." type="text" inputmode="url"></div>
-          <div class="fg"><label>תמונת רקע לדף הבית – קישור</label><input class="fi" id="s-hero" placeholder="https://..." type="text" inputmode="url"></div>
+          <div class="fg"><label>לוגו – קישור לתמונה</label><input class="fi" id="s-logo" placeholder="https://..." type="url"></div>
+          <div class="fg"><label>תמונת רקע לדף הבית – קישור</label><input class="fi" id="s-hero" placeholder="https://..." type="url"></div>
           <button class="btn-ss" id="save-gen">שמור</button>
         </div>
 
         <div class="sc">
           <div class="sc-title"><span class="ic">📞</span> יצירת קשר</div>
-          <div class="fg"><label>טלפון</label><input class="fi" id="s-phone" placeholder="050-1234567" type="tel" style="direction:ltr;text-align:right" inputmode="tel"></div>
-          <div class="fg"><label>WhatsApp</label><input class="fi" id="s-wa" placeholder="050-1234567" type="tel" style="direction:ltr;text-align:right" inputmode="tel"></div>
+          <div class="fg"><label>טלפון</label><input class="fi" id="s-phone" placeholder="050-1234567" type="tel"></div>
+          <div class="fg"><label>WhatsApp</label><input class="fi" id="s-wa" placeholder="050-1234567" type="tel"></div>
           <button class="btn-ss" id="save-contact">שמור</button>
         </div>
 
@@ -332,7 +328,21 @@
 
     <div class="fg"><label>מועד סיום הרשמה</label><input class="fi" type="datetime-local" id="f-deadline"></div>
 
-    <!-- Payment buttons – MAX 2 -->
+    <!-- Pinned toggle -->
+    <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(200,136,42,.06);border:1.5px solid rgba(200,136,42,.18);border-radius:10px">
+      <input type="checkbox" id="f-pinned" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
+      <label for="f-pinned" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">📌 נעוץ – יופיע ראשון ללא קשר לתאריך ההוספה</label>
+    </div>
+
+    <!-- Google Form -->
+    <div class="fg">
+      <label>קישור לטופס גוגל (הרשמה)</label>
+      <input class="fi" type="text" id="f-form-url" placeholder="https://forms.gle/..." inputmode="url" style="direction:ltr;text-align:right">
+    </div>
+    <div class="fg">
+      <label>תווית כפתור טופס</label>
+      <input class="fi" id="f-form-label" placeholder="להרשמה בטופס גוגל">
+    </div>
     <div class="fg">
       <label>כפתורי תשלום <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(עד 2 כפתורים)</span></label>
       <div class="pay-builder">
@@ -468,8 +478,9 @@
 
   function openForm(id){
     editId=id; uploadFile=null; existingUrl=null; payRowCount=0;
-    ['f-title','f-desc','f-adult','f-child','f-deadline','f-img-url'].forEach(i=>{const el=$(i);if(el)el.value=''});
+    ['f-title','f-desc','f-adult','f-child','f-deadline','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
     $('f-cat').value='events';
+    $('f-pinned').checked=false;
     $('upload-preview').style.display='none';
     $('url-preview').style.display='none';
     $('pay-rows').innerHTML='';
@@ -484,6 +495,9 @@
         $('f-adult').value=ev.priceAdult??'';
         $('f-child').value=ev.priceChild??'';
         $('f-cat').value=ev.category||'events';
+        $('f-pinned').checked=!!ev.pinned;
+        $('f-form-url').value=ev.formLink||'';
+        $('f-form-label').value=ev.formLabel||'';
         const d=dl(ev);
         if(d&&!isNaN(d)) $('f-deadline').value=d.toISOString().slice(0,16);
         if(ev.imageUrl){existingUrl=ev.imageUrl;$('upload-preview').src=ev.imageUrl;$('upload-preview').style.display='block'}
@@ -581,6 +595,9 @@
     const dlRaw=  $('f-deadline').value;
     const imgUrl= $('f-img-url').value.trim();
     const useUrl= $('ip-url').classList.contains('on');
+    const pinned= $('f-pinned').checked;
+    const formLink= $('f-form-url').value.trim()||null;
+    const formLabel= $('f-form-label').value.trim()||null;
 
     /* collect pay buttons */
     const rows=[...$('pay-rows').querySelectorAll('.pay-btn-row')];
@@ -609,6 +626,7 @@
         title,description:desc,priceAdult:adult,priceChild:child,
         category:cat,imageUrl,paymentLink,paymentLabel,paymentButtons,
         registrationDeadline:dlRaw?new Date(dlRaw):null,
+        pinned, formLink, formLabel,
         updatedAt:serverTimestamp()
       };
 
@@ -659,60 +677,12 @@
   async function saveSettings(patch){
     showProg(true);
     try{
-      const cleaned={};
-      for(const [k,v] of Object.entries(patch)){
-        cleaned[k]=(typeof v==='string'&&v.trim()==='')?null:v;
-      }
-      console.log('[saveSettings] attempting setDoc with:', cleaned);
-      await setDoc(doc(db,'settings','main'),{...settingsData,...cleaned},{merge:true});
-      settingsData={...settingsData,...cleaned};
+      await setDoc(doc(db,'settings','main'),{...settingsData,...patch},{merge:true});
+      settingsData={...settingsData,...patch};
       showToast('✅ הגדרות נשמרו');
-    }catch(e){
-      console.error('[saveSettings] FULL ERROR:', e);
-      const msg = e.code==='permission-denied'
-        ? 'שגיאת הרשאות Firestore – בדוק Rules עבור /settings/main'
-        : `שגיאה: ${e.code||''} – ${e.message}`;
-      showToast(msg, true);
-    }
+    }catch(e){showToast('שגיאה בשמירה',true);console.error(e)}
     finally{showProg(false)}
   }
-
-  /* ══ CONNECTION TEST ══ */
-  $('btn-test-db').onclick = async () => {
-    const res = $('db-test-result');
-    res.style.display='block';
-    res.style.background='rgba(200,136,42,.07)';
-    res.style.border='1.5px solid rgba(200,136,42,.2)';
-    res.style.color='var(--text-mid)';
-    res.textContent='⏳ בודק חיבור...';
-    const lines=[];
-    // 1. read settings/main
-    try{
-      const s=await getDoc(doc(db,'settings','main'));
-      lines.push('✅ קריאה מ-settings/main: הצליחה' + (s.exists()?' (המסמך קיים)':' (המסמך לא קיים עדיין – ייווצר בשמירה ראשונה)'));
-    }catch(e){
-      lines.push('❌ קריאה מ-settings/main נכשלה: '+e.code+' – '+e.message);
-    }
-    // 2. write test
-    try{
-      await setDoc(doc(db,'settings','main'),{_test:true},{merge:true});
-      lines.push('✅ כתיבה ל-settings/main: הצליחה – Firestore Rules מאפשרים כתיבה');
-      // cleanup
-      await updateDoc(doc(db,'settings','main'),{_test:null}).catch(()=>{});
-    }catch(e){
-      lines.push('❌ כתיבה ל-settings/main נכשלה: '+e.code+' – '+e.message);
-      if(e.code==='permission-denied'){
-        lines.push('');
-        lines.push('🔧 כדי לתקן: פתח Firebase Console → Firestore Database → Rules והוסף:');
-        lines.push('  match /settings/{id} { allow read, write: if request.auth != null; }');
-      }
-    }
-    const ok=lines.every(l=>!l.startsWith('❌'));
-    res.style.background=ok?'rgba(39,174,96,.07)':'rgba(192,57,43,.07)';
-    res.style.border=`1.5px solid ${ok?'rgba(39,174,96,.25)':'rgba(192,57,43,.25)'}`;
-    res.style.color=ok?'var(--success)':'var(--danger)';
-    res.innerHTML=lines.map(l=>`<div>${l}</div>`).join('');
-  };
 
   $('save-gen').onclick   = ()=>saveSettings({orgName:$('s-org').value.trim(),logoUrl:$('s-logo').value.trim(),heroBgUrl:$('s-hero').value.trim()});
   $('save-contact').onclick=()=>saveSettings({phone:$('s-phone').value.trim(),whatsapp:$('s-wa').value.trim()});
