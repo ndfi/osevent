@@ -209,7 +209,7 @@
     .card-img { height: 195px; overflow: hidden; background: var(--grad); position: relative; }
     .card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
     .event-card:hover .card-img img { transform: scale(1.06); }
-    .card-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: .38; }
+    .card-ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .card-cat-badge { position: absolute; bottom: 10px; right: 10px; font-size: .67rem; font-weight: 700; letter-spacing: 1px; color: #fff; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
     .card-closed { position: absolute; top: 10px; left: 10px; font-size: .67rem; font-weight: 700; color: #fff; background: rgba(192,57,43,.88); padding: 4px 10px; border-radius: 20px; }
     .card-body { padding: 19px 20px 18px; }
@@ -253,14 +253,14 @@
     /* ══════════════════════ DETAIL MODAL ══════════════════════ */
     .modal-bg { position: fixed; inset: 0; z-index: 500; background: rgba(26,14,6,.5); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity .3s; }
     .modal-bg.active { opacity: 1; pointer-events: all; }
-    .modal-sheet { position: fixed; inset: 0; z-index: 501; overflow-y: auto; display: flex; align-items: flex-start; justify-content: center; pointer-events: none; opacity: 0; transition: opacity .3s; }
+    .modal-sheet { position: fixed; inset: 0; z-index: 501; overflow-y: auto; pointer-events: none; opacity: 0; transition: opacity .3s; }
     .modal-sheet.active { opacity: 1; pointer-events: all; }
-    .modal-inner { width: 100%; max-width: 800px; background: var(--bg); min-height: 100vh; transform: translateY(30px); transition: transform .38s cubic-bezier(.22,.68,0,1.2); }
+    .modal-inner { width: 100%; max-width: 680px; margin: 0 auto; background: var(--bg); min-height: 100vh; transform: translateY(30px); transition: transform .38s cubic-bezier(.22,.68,0,1.2); }
     .modal-sheet.active .modal-inner { transform: translateY(0); }
-    @media (max-width: 800px) { .modal-inner { max-width: 100%; } .modal-sheet { align-items: stretch; } }
+    @media (max-width: 720px) { .modal-inner { max-width: 100%; margin: 0; } }
 
-    .d-hero { height: 380px; position: relative; overflow: hidden; }
-    .d-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; filter: brightness(.46) saturate(1.3); display: block; }
+    .d-hero { height: 380px; position: relative; overflow: hidden; width: 100%; }
+    .d-hero img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; filter: brightness(.46) saturate(1.3); display: block; margin: 0; }
     .d-hero-plain { height: 380px; background: var(--grad); }
     .d-overlay { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(26,14,6,.15) 0%,rgba(26,14,6,.9) 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 40px 36px; }
     .d-title { font-size: clamp(1.7rem,4vw,2.6rem); font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 10px; text-shadow: 0 3px 16px rgba(26,14,6,.7); }
@@ -618,7 +618,7 @@
           ${ev.imageUrl
             ? `<img src="${ev.imageUrl}" alt="${ev.title}" loading="lazy">`
             : `<div class="card-ph">${settings.logoUrl
-                ? `<img src="${settings.logoUrl}" alt="לוגו" style="width:72px;height:72px;object-fit:contain;opacity:.22;filter:grayscale(1)" onerror="this.style.display='none'">`
+                ? `<img src="${settings.logoUrl}" alt="לוגו" style="width:100%;height:100%;object-fit:cover;opacity:.13;filter:grayscale(1) blur(1px)" onerror="this.style.display='none'">`
                 : `<svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(200,136,42,.4)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`
               }</div>`
           }
@@ -666,7 +666,9 @@
       <div class="d-hero">
         ${ev.imageUrl
           ? `<img src="${ev.imageUrl}" alt="${ev.title}">`
-          : `<div class="d-hero-plain" style="display:flex;align-items:center;justify-content:center">${settings.logoUrl ? `<img src="${settings.logoUrl}" alt="לוגו" style="width:110px;height:110px;object-fit:contain;opacity:.18;filter:grayscale(1)" onerror="this.style.display='none'">` : ''}</div>`
+          : `<div class="d-hero-plain" style="display:flex;align-items:center;justify-content:center;overflow:hidden">${settings.logoUrl
+              ? `<img src="${settings.logoUrl}" alt="לוגו" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.1;filter:grayscale(1) blur(2px)" onerror="this.style.display='none'">`
+              : ''}</div>`
         }
         <div class="d-overlay">
           <h1 class="d-title">${ev.title}</h1>
