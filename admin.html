@@ -237,6 +237,7 @@
   <main class="admin-content">
     <div class="a-tabs">
       <button class="a-tab active" data-panel="events">🗓️ אירועים</button>
+      <button class="a-tab" data-panel="beitmidrash">📖 בית מדרש</button>
       <button class="a-tab" data-panel="inflatables">🎈 מתנפחים</button>
       <button class="a-tab" data-panel="settings">⚙️ הגדרות</button>
     </div>
@@ -257,6 +258,27 @@
           </tr></thead>
           <tbody id="ev-tbody">
             <tr><td colspan="6"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BEIT MIDRASH PANEL -->
+    <div class="a-panel" id="panel-beitmidrash">
+      <div class="top-bar">
+        <h2>בית מדרש קהילתי <span id="bm-count" style="font-size:.95rem;color:var(--text-soft);font-weight:600"></span></h2>
+        <button class="btn-new" id="btn-new-bm" style="background:linear-gradient(135deg,#6B3410,#8B4513)">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          שיעור / פעילות חדשה
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>תמונה</th><th>כותרת</th><th>סיום הרשמה</th><th>סטטוס</th><th>פעולות</th>
+          </tr></thead>
+          <tbody id="bm-tbody">
+            <tr><td colspan="5"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -476,7 +498,7 @@
 
   /* ══ AUTH ══ */
   onAuthStateChanged(auth, u => {
-    if (u) { authPage.style.display='none'; adminApp.style.display='block'; navUser.textContent=u.email; loadEvents(); loadSettings(); loadInflatables(); }
+    if (u) { authPage.style.display='none'; adminApp.style.display='block'; navUser.textContent=u.email; loadEvents(); loadSettings(); loadInflatables(); loadBeitMidrash(); }
     else   { authPage.style.display='flex'; adminApp.style.display='none'; }
   });
 
@@ -535,30 +557,32 @@
   $('btn-mc').onclick  = closeForm;
   $('btn-fcan').onclick= closeForm;
 
-  function openForm(id){
+  let currentCollection = 'events'; // track which collection we're editing
+
+  function openForm(id, evObj, collectionName){
+    currentCollection = collectionName || 'events';
     editId=id; uploadFile=null; existingUrl=null; payRowCount=0;
-    // safely reset all fields
     ['f-title','f-desc','f-adult','f-child','f-child-note','f-deadline','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
-    const catEl=$('f-cat'); if(catEl) catEl.value='events';
+    const catEl=$('f-cat'); if(catEl) catEl.value= currentCollection==='beitmidrash' ? 'beitmidrash' : 'events';
     const pinnedEl=$('f-pinned'); if(pinnedEl) pinnedEl.checked=false;
     const prevEl=$('upload-preview'); if(prevEl) prevEl.style.display='none';
     const urlPrev=$('url-preview'); if(urlPrev) urlPrev.style.display='none';
     const payRows=$('pay-rows'); if(payRows) payRows.innerHTML='';
     setImgMode('up');
 
-    if(id){
-      $('fm-title').textContent='עריכת אירוע';
-      const ev=allEvents.find(e=>e.id===id);
-      if(ev){
-        $('f-title').value=ev.title||'';
-        $('f-desc').value=ev.description||'';
-        $('f-adult').value=ev.priceAdult??'';
-        $('f-child').value=ev.priceChild??'';
-        $('f-child-note').value=ev.priceChildNote||'';
-        $('f-cat').value=ev.category||'events';
-        $('f-pinned').checked=!!ev.pinned;
-        $('f-form-url').value=ev.formLink||'';
-        $('f-form-label').value=ev.formLabel||'';
+    const ev = evObj || (id ? (currentCollection==='beitmidrash' ? allBM : allEvents).find(e=>e.id===id) : null);
+
+    if(id && ev){
+      $('fm-title').textContent = currentCollection==='beitmidrash' ? 'עריכת שיעור/פעילות' : 'עריכת אירוע';
+      $('f-title').value=ev.title||'';
+      $('f-desc').value=ev.description||'';
+      $('f-adult').value=ev.priceAdult??'';
+      $('f-child').value=ev.priceChild??'';
+      $('f-child-note').value=ev.priceChildNote||'';
+      $('f-cat').value=ev.category||(currentCollection==='beitmidrash'?'beitmidrash':'events');
+      $('f-pinned').checked=!!ev.pinned;
+      $('f-form-url').value=ev.formLink||'';
+      $('f-form-label').value=ev.formLabel||'';
         const d=dl(ev);
         if(d&&!isNaN(d)) $('f-deadline').value=d.toISOString().slice(0,16);
         if(ev.imageUrl){existingUrl=ev.imageUrl;$('upload-preview').src=ev.imageUrl;$('upload-preview').style.display='block'}
@@ -692,10 +716,13 @@
         updatedAt:serverTimestamp()
       };
 
-      if(editId){ await updateDoc(doc(db,'events',editId),data); showToast('✅ האירוע עודכן'); }
-      else       { data.createdAt=serverTimestamp(); await addDoc(collection(db,'events'),data); showToast('✅ האירוע נוצר'); }
+      const col = currentCollection || 'events';
+      if(editId){ await updateDoc(doc(db,col,editId),data); showToast('✅ עודכן בהצלחה'); }
+      else       { data.createdAt=serverTimestamp(); await addDoc(collection(db,col),data); showToast('✅ נוצר בהצלחה'); }
 
-      closeForm(); await loadEvents();
+      closeForm();
+      if(col==='beitmidrash') await loadBeitMidrash();
+      else await loadEvents();
     }catch(e){showToast('שגיאה: '+e.message,true);console.error(e)}
     finally{btn.disabled=false;btn.textContent='שמור אירוע';showProg(false)}
   };
@@ -761,7 +788,77 @@
   }
   function collectPi(cid){return[...$( cid).querySelectorAll('.pi-row')].map(r=>({icon:r.querySelector('[data-f=icon]').value,title:r.querySelector('[data-f=title]').value,price:r.querySelector('[data-f=price]').value,desc:r.querySelector('[data-f=desc]').value,link:r.querySelector('[data-f=link]').value})).filter(i=>i.title)}
 
-  /* ══ INFLATABLES ADMIN ══ */
+  /* ══ BEIT MIDRASH ADMIN ══ */
+  let allBM = [], bmEditId = null;
+
+  async function loadBeitMidrash() {
+    const tb = $('bm-tbody'), cnt = $('bm-count');
+    tb.innerHTML = `<tr><td colspan="5"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>`;
+    try {
+      const q = query(collection(db,'beitmidrash'), orderBy('createdAt','desc'));
+      const s = await getDocs(q);
+      allBM = s.docs.map(d=>({id:d.id,...d.data()}));
+      cnt.textContent = `(${allBM.length})`;
+      renderBMTable();
+    } catch(e) { showToast('שגיאה בטעינת בית מדרש',true); console.error(e); }
+  }
+
+  function renderBMTable() {
+    const tb = $('bm-tbody');
+    if (!allBM.length) {
+      tb.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-soft)">אין שיעורים/פעילויות. לחץ "שיעור / פעילות חדשה".</td></tr>`;
+      return;
+    }
+    tb.innerHTML = allBM.map(ev => {
+      const d  = dl(ev);
+      const ds = d&&!isNaN(d) ? d.toLocaleDateString('he-IL') : '—';
+      const cl = d&&!isNaN(d)&&d<=new Date();
+      return `<tr>
+        <td>${ev.imageUrl?`<img src="${ev.imageUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px" loading="lazy">`:'<div style="width:44px;height:44px;border-radius:8px;background:rgba(139,69,19,.1);display:flex;align-items:center;justify-content:center;font-size:1.2rem">📖</div>'}</td>
+        <td><strong>${ev.title}</strong>${ev.pinned?' 📌':''}</td>
+        <td style="font-size:.82rem">${ds}</td>
+        <td><span style="font-size:.75rem;padding:3px 9px;border-radius:20px;font-weight:700;background:${cl?'rgba(192,57,43,.1)':'rgba(39,174,96,.1)'};color:${cl?'var(--danger)':'var(--success)'}">${cl?'סגורה':'פתוחה'}</span></td>
+        <td><div class="td-act">
+          <button class="btn-tbl" onclick="bmEdit('${ev.id}')">✏️ עריכה</button>
+          <button class="btn-tbl del" onclick="bmDelete('${ev.id}')">🗑️</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  window.bmEdit = function(id) {
+    bmEditId = id;
+    const ev = allBM.find(e=>e.id===id);
+    if (!ev) return;
+    // reuse the events form modal
+    openForm(id, ev, 'bm');
+  };
+
+  window.bmDelete = async function(id) {
+    $('cdlg').style.display='flex';
+    window._bmDelId = id;
+  };
+
+  // hook bm delete confirm into existing confirm dialog
+  const origDelConfirm = $('cdlg-confirm')?.onclick;
+  if ($('cdlg-confirm')) {
+    $('cdlg-confirm').addEventListener('click', async () => {
+      if (window._bmDelId) {
+        try {
+          await deleteDoc(doc(db,'beitmidrash', window._bmDelId));
+          allBM = allBM.filter(e=>e.id!==window._bmDelId);
+          $('bm-count').textContent=`(${allBM.length})`;
+          renderBMTable();
+          showToast('הפעילות נמחקה');
+        } catch(e){ showToast('שגיאה: '+e.message,true); }
+        window._bmDelId = null;
+        $('cdlg').style.display='none';
+      }
+    });
+  }
+
+  $('btn-new-bm').addEventListener('click', () => openForm(null, null, 'bm'));
+  /* ══ END BEIT MIDRASH ADMIN ══ */
   let allInflatables = [], infEditId = null;
 
   async function loadInflatables() {

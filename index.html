@@ -306,7 +306,63 @@
     .btn-pay.alt:hover { background: rgba(200,136,42,.07); box-shadow: 0 6px 22px rgba(200,136,42,.32); }
     .btn-pay.disabled { background: rgba(180,160,130,.26); color: rgba(100,80,50,.38); box-shadow: none; pointer-events: none; }
 
-    /* ══ INFLATABLES ══ */
+    /* ══ BEIT MIDRASH ══ */
+  let allBM = [];
+  async function loadBeitMidrash() {
+    const grid = document.getElementById('bm-grid');
+    grid.innerHTML = `<div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
+    try {
+      const q    = query(collection(db,'beitmidrash'), orderBy('createdAt','desc'));
+      const snap = await getDocs(q);
+      allBM = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderBM();
+    } catch(e) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>שגיאה בטעינת בית המדרש</p></div>';
+      console.error(e);
+    }
+  }
+
+  function renderBM() {
+    const grid = document.getElementById('bm-grid');
+    const cnt  = document.getElementById('bm-count');
+    cnt.textContent = allBM.length;
+    if (!allBM.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">📖</div><p>אין פעילויות בית מדרש כרגע</p></div>';
+      return;
+    }
+    grid.innerHTML = allBM.map(ev => {
+      const d  = deadline(ev);
+      const ds = d&&!isNaN(d) ? d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+      const cl = isClosed(ev);
+      return `
+      <article class="event-card${ev.pinned?' pinned':''}" data-id="${ev.id}" data-type="bm" role="button" tabindex="0">
+        <div class="card-img">
+          ${ev.imageUrl
+            ? `<img src="${ev.imageUrl}" alt="${ev.title}" loading="lazy">`
+            : `<div class="card-ph">${settings.logoUrl
+                ? `<img src="${settings.logoUrl}" alt="לוגו" style="width:100%;height:100%;object-fit:cover;opacity:.13;filter:grayscale(1) blur(1px)">`
+                : `<svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(139,69,19,.4)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`
+              }</div>`
+          }
+          <span class="card-cat-badge" style="background:#8B4513cc">📖 בית מדרש</span>
+          ${ev.pinned ? '<span class="card-pinned-badge">📌 נעוץ</span>' : ''}
+          ${cl ? '<span class="card-closed">⛔ הרשמה סגורה</span>' : ''}
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">${ev.title}</h3>
+          <p class="card-desc">${ev.description||''}</p>
+          <div class="card-meta">
+            ${ds ? `<span class="card-meta-item"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>${ds}</span>` : ''}
+            <span class="card-meta-item"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>מבוגר ₪${ev.priceAdult||0} | ילד ₪${ev.priceChild||0}</span>
+          </div>
+        </div>
+      </article>`;
+    }).join('');
+    grid.querySelectorAll('.event-card[data-type="bm"]').forEach(c =>
+      c.addEventListener('click', () => openDetail(c.dataset.id, allBM))
+    );
+  }
+  /* ══ END BEIT MIDRASH ══ */
     .inflatables-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 18px; }
     .inf-card { background:#fff; border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; transition:transform .22s,box-shadow .22s; }
     .inf-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
@@ -399,6 +455,7 @@
 <div class="mobile-drawer" id="mobile-drawer">
   <nav class="mobile-drawer-nav">
     <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🗓️</span>אירועים</button>
+    <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
     <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
     <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
     <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
@@ -424,11 +481,12 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="sidebar-link active" data-page="events"     onclick="showPage('events',this)"><span class="link-icon">🗓️</span>אירועים</button>
+      <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this)"><span class="link-icon">🗓️</span>אירועים</button>
+      <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
       <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
-      <button class="sidebar-link"        data-page="playground" onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
-      <button class="sidebar-link"        data-page="classes"    onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
-      <button class="sidebar-link"        data-page="contact"    onclick="showPage('contact',this)"><span class="link-icon">📞</span>יצירת קשר</button>
+      <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
+      <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
+      <button class="sidebar-link"        data-page="contact"     onclick="showPage('contact',this)"><span class="link-icon">📞</span>יצירת קשר</button>
     </nav>
   </aside>
 
@@ -451,6 +509,7 @@
       <div class="cat-tabs">
         <button class="cat-tab active" data-cat="all">🌟 הכל</button>
         <button class="cat-tab" data-cat="events">🗓️ במעגל השנה</button>
+        <button class="cat-tab" data-cat="beitmidrash">📖 בית מדרש</button>
         <button class="cat-tab" data-cat="inflatables">🎈 מתנפחים</button>
         <button class="cat-tab" data-cat="playground">🎠 משחקייה</button>
         <button class="cat-tab" data-cat="classes">🎨 חוגים</button>
@@ -465,6 +524,19 @@
           <span class="section-count" id="events-count">0</span>
         </div>
         <div class="events-grid" id="events-grid">
+          <div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: BEIT MIDRASH -->
+    <div class="page" id="page-beitmidrash">
+      <div class="section">
+        <div class="section-hdr">
+          <h2 class="section-title">📖 בית מדרש קהילתי</h2>
+          <span class="section-count" id="bm-count">0</span>
+        </div>
+        <div class="events-grid" id="bm-grid">
           <div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
         </div>
       </div>
@@ -654,8 +726,8 @@
     });
   });
 
-  const CAT_LABEL = {events:'במעגל השנה', playground:'משחקייה', classes:'חוגים', inflatables:'מתנפחים'};
-  const CAT_COLOR = {events:'#C8882Acc', playground:'#3d8a3dcc', classes:'#2d5aa0cc', inflatables:'#9b42d4cc'};
+  const CAT_LABEL = {events:'במעגל השנה', playground:'משחקייה', classes:'חוגים', inflatables:'מתנפחים', beitmidrash:'בית מדרש קהילתי'};
+  const CAT_COLOR = {events:'#C8882Acc', playground:'#3d8a3dcc', classes:'#2d5aa0cc', inflatables:'#9b42d4cc', beitmidrash:'#8B4513cc'};
 
   function deadline(ev) {
     if (!ev.registrationDeadline) return null;
@@ -699,8 +771,9 @@
   }
 
   /* ── DETAIL ── */
-  function openDetail(id) {
-    const ev = allEvents.find(e=>e.id===id);
+  function openDetail(id, eventsList) {
+    const list = eventsList || allEvents;
+    const ev = list.find(e=>e.id===id);
     if (!ev) return;
     clearInterval(cdInterval);
     const d  = deadline(ev);
@@ -812,8 +885,14 @@
     tick(); cdInterval=setInterval(tick,1000);
   }
 
+  /* ══ TOAST ══ */
+  function showToast(msg, isErr=false) {
+    toastEl.textContent = msg;
+    toastEl.style.background = isErr ? 'rgba(180,30,30,.95)' : 'rgba(26,14,6,.94)';
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 3400);
+  }
   function openLb(url) { lbImg.src=url; lightbox.classList.add('active'); }
-  document.getElementById('lb-close').onclick=()=>lightbox.classList.remove('active');
   lightbox.onclick=e=>{ if(e.target===lightbox) lightbox.classList.remove('active'); };
 
   /* ══════════════ INFLATABLES ══════════════ */
@@ -930,7 +1009,7 @@
   });
   /* ══════════════ END INFLATABLES ══════════════ */
 
-  await Promise.all([loadSettings(), loadEvents(), loadInflatables()]);
+  await Promise.all([loadSettings(), loadEvents(), loadInflatables(), loadBeitMidrash()]);
 </script>
 
 <!-- PAGE SWITCHING + BURGER (non-module) -->
@@ -943,9 +1022,10 @@
     hero.style.display   = isEv ? '' : 'none';
 
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
+    const pg = document.getElementById('page-' + name);
+    if (pg) pg.classList.add('active');
 
-    /* sidebar + drawer active states */
+    /* sync ALL sidebar-link buttons (both sidebar and mobile drawer) */
     document.querySelectorAll('.sidebar-link[data-page]').forEach(l =>
       l.classList.toggle('active', l.dataset.page === name)
     );
