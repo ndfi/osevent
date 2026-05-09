@@ -454,11 +454,11 @@
 <!-- Mobile drawer -->
 <div class="mobile-drawer" id="mobile-drawer">
   <nav class="mobile-drawer-nav">
-    <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🗓️</span>כלל האירועים</button>
-    <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
-    <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
+    <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🗓️</span>אירועים</button>
     <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
     <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
+    <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
+    <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
     <button class="sidebar-link"        data-page="contact"      onclick="showPage('contact',this);closeDrawer()"><span class="link-icon">📞</span>יצירת קשר</button>
   </nav>
 </div>
@@ -481,11 +481,11 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this)"><span class="link-icon">🗓️</span>כלל האירועים</button>
-      <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
-      <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
+      <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this)"><span class="link-icon">🗓️</span>אירועים</button>
       <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
       <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
+      <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
+      <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
       <button class="sidebar-link"        data-page="contact"     onclick="showPage('contact',this)"><span class="link-icon">📞</span>יצירת קשר</button>
     </nav>
   </aside>
@@ -507,11 +507,12 @@
     <!-- CATEGORY TABS -->
     <div class="cat-bar" id="cat-bar">
       <div class="cat-tabs">
-        <button class="cat-tab active" data-cat="all">🌟 כלל האירועים</button>
+        <button class="cat-tab active" data-cat="all">🌟 הכל</button>
         <button class="cat-tab" data-cat="events">🗓️ במעגל השנה</button>
+        <button class="cat-tab" data-cat="beitmidrash">📖 בית מדרש</button>
+        <button class="cat-tab" data-cat="inflatables">🎈 מתנפחים</button>
         <button class="cat-tab" data-cat="playground">🎠 משחקייה</button>
         <button class="cat-tab" data-cat="classes">🎨 חוגים</button>
-        <button class="cat-tab" data-cat="beitmidrash">📖 בית מדרש קהילתי</button>
       </div>
     </div>
 
@@ -735,28 +736,16 @@
   function isClosed(ev) { const d=deadline(ev); return d&&!isNaN(d)&&d<=new Date(); }
 
   function renderCards(cat) {
-    // merge events + beit midrash (beitmidrash items stored separately but shown in same grid)
-    const bmItems = (allBM||[]).map(ev=>({...ev, category:'beitmidrash', _fromBM:true}));
-    let combined;
-    if (cat==='all')           combined = [...allEvents, ...bmItems];
-    else if (cat==='beitmidrash') combined = bmItems;
-    else                       combined = allEvents.filter(ev=>(ev.category||'events')===cat);
-
-    // pinned first
-    combined = combined.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
-
-    eventsCount.textContent = combined.length;
-    if (!combined.length) {
-      eventsGrid.innerHTML='<div class="empty"><div class="empty-icon">🗓️</div><p>אין אירועים בקטגוריה זו</p></div>';
-      return;
-    }
-    eventsGrid.innerHTML = combined.map(ev => {
+    const list = cat==='all' ? allEvents : allEvents.filter(ev=>(ev.category||'events')===cat);
+    eventsCount.textContent = list.length;
+    if (!list.length) { eventsGrid.innerHTML='<div class="empty"><div class="empty-icon">🗓️</div><p>אין אירועים בקטגוריה זו</p></div>'; return; }
+    eventsGrid.innerHTML = list.map(ev => {
       const d  = deadline(ev);
       const ds = d&&!isNaN(d) ? d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
       const cl = isClosed(ev);
       const ck = ev.category||'events';
       return `
-      <article class="event-card${ev.pinned?' pinned':''}" data-id="${ev.id}" data-bm="${ev._fromBM?'1':'0'}" role="button" tabindex="0">
+      <article class="event-card" data-id="${ev.id}" role="button" tabindex="0">
         <div class="card-img">
           ${ev.imageUrl
             ? `<img src="${ev.imageUrl}" alt="${ev.title}" loading="lazy">`
@@ -766,7 +755,6 @@
               }</div>`
           }
           <span class="card-cat-badge" style="background:${CAT_COLOR[ck]||CAT_COLOR.events}">${CAT_LABEL[ck]||ck}</span>
-          ${ev.pinned ? '<span class="card-pinned-badge">📌 נעוץ</span>' : ''}
           ${cl ? '<span class="card-closed">⛔ הרשמה סגורה</span>' : ''}
         </div>
         <div class="card-body">
