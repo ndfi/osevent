@@ -237,6 +237,7 @@
   <main class="admin-content">
     <div class="a-tabs">
       <button class="a-tab active" data-panel="events">🗓️ אירועים</button>
+      <button class="a-tab" data-panel="inflatables">🎈 מתנפחים</button>
       <button class="a-tab" data-panel="settings">⚙️ הגדרות</button>
     </div>
 
@@ -258,6 +259,40 @@
             <tr><td colspan="6"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- INFLATABLES PANEL -->
+    <div class="a-panel" id="panel-inflatables">
+      <div class="top-bar">
+        <h2>מתנפחים <span id="inf-count" style="font-size:.95rem;color:var(--text-soft);font-weight:600"></span></h2>
+        <button class="btn-new" id="btn-new-inf" style="background:linear-gradient(135deg,#6b2fa0,#9b42d4)">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          פעילות חדשה
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>תאריך</th><th>שעה</th><th>אחראי</th><th>הערות</th><th>פעולות</th></tr></thead>
+          <tbody id="inf-tbody">
+            <tr><td colspan="5"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Inflatable Form -->
+      <div class="fm" id="inf-form" style="display:none;margin-top:24px">
+        <h3 class="fm-title" id="inf-form-title">פעילות חדשה 🎈</h3>
+        <div class="fg"><label>תאריך ושעה <span style="color:red">*</span></label><input class="fi" type="datetime-local" id="if-datetime"></div>
+        <div class="fg"><label>משך הפעילות <span style="font-size:.75rem;color:var(--text-soft)">(לדוגמה: שעה וחצי)</span></label><input class="fi" id="if-duration" placeholder="שעה וחצי"></div>
+        <div class="fg">
+          <label>אחראי פעילות <span style="font-size:.75rem;color:var(--text-soft)">(אופציונלי – אם ריק ניתן לשיבוץ עצמי)</span></label>
+          <input class="fi" id="if-owner" placeholder="השאר ריק לאפשרות שיבוץ עצמי">
+        </div>
+        <div class="fg"><label>הערות לציבור</label><textarea class="fi" id="if-note" rows="2" placeholder="מידע נוסף לגבי הפעילות..." style="resize:vertical"></textarea></div>
+        <div style="display:flex;gap:12px;margin-top:8px">
+          <button class="btn-new" id="inf-save-btn" style="background:linear-gradient(135deg,#6b2fa0,#9b42d4)">💾 שמור פעילות</button>
+          <button class="btn-new" id="inf-cancel-btn" style="background:transparent;border:1.5px solid var(--border);color:var(--text-soft)">ביטול</button>
+        </div>
       </div>
     </div>
 
@@ -441,7 +476,7 @@
 
   /* ══ AUTH ══ */
   onAuthStateChanged(auth, u => {
-    if (u) { authPage.style.display='none'; adminApp.style.display='block'; navUser.textContent=u.email; loadEvents(); loadSettings(); }
+    if (u) { authPage.style.display='none'; adminApp.style.display='block'; navUser.textContent=u.email; loadEvents(); loadSettings(); loadInflatables(); }
     else   { authPage.style.display='flex'; adminApp.style.display='none'; }
   });
 
@@ -725,6 +760,127 @@
     el.appendChild(row);
   }
   function collectPi(cid){return[...$( cid).querySelectorAll('.pi-row')].map(r=>({icon:r.querySelector('[data-f=icon]').value,title:r.querySelector('[data-f=title]').value,price:r.querySelector('[data-f=price]').value,desc:r.querySelector('[data-f=desc]').value,link:r.querySelector('[data-f=link]').value})).filter(i=>i.title)}
+
+  /* ══ INFLATABLES ADMIN ══ */
+  let allInflatables = [], infEditId = null;
+
+  async function loadInflatables() {
+    const tb = $('inf-tbody'), cnt = $('inf-count');
+    tb.innerHTML = `<tr><td colspan="5"><div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div></td></tr>`;
+    try {
+      const q = query(collection(db,'inflatables'), orderBy('date','asc'));
+      const s = await getDocs(q);
+      allInflatables = s.docs.map(d=>({id:d.id,...d.data()}));
+      cnt.textContent = `(${allInflatables.length})`;
+      renderInfTable();
+    } catch(e) { showToast('שגיאה בטעינת מתנפחים',true); console.error(e); }
+  }
+
+  function renderInfTable() {
+    const tb = $('inf-tbody');
+    if (!allInflatables.length) {
+      tb.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-soft)">אין פעילויות. לחץ "פעילות חדשה" להוספה.</td></tr>`;
+      return;
+    }
+    tb.innerHTML = allInflatables.map(inf => {
+      const d = inf.date?.toDate ? inf.date.toDate() : new Date(inf.date);
+      const dateStr = isNaN(d) ? '—' : d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'numeric'});
+      const timeStr = isNaN(d) ? '—' : d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      return `<tr>
+        <td><strong>${dateStr}</strong></td>
+        <td>${timeStr}</td>
+        <td>${inf.ownerName
+          ? `<span style="color:#2a7a2a;font-weight:600">✅ ${inf.ownerName}</span>`
+          : `<span style="color:var(--text-soft);font-style:italic">פתוח לשיבוץ</span>`
+        }</td>
+        <td style="font-size:.82rem;color:var(--text-soft);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${inf.note||'—'}</td>
+        <td><div class="td-act">
+          <button class="btn-tbl" onclick="infEdit('${inf.id}')">✏️ עריכה</button>
+          <button class="btn-tbl del" onclick="infClearOwner('${inf.id}')" title="נקה אחראי" ${!inf.ownerName?'disabled':''}>🔓 נקה</button>
+          <button class="btn-tbl del" onclick="infDelete('${inf.id}')">🗑️</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* expose to onclick attrs */
+  window.infEdit = function(id) {
+    infEditId = id;
+    const inf = allInflatables.find(i=>i.id===id);
+    if (!inf) return;
+    const d = inf.date?.toDate ? inf.date.toDate() : new Date(inf.date);
+    $('if-datetime').value = isNaN(d) ? '' : d.toISOString().slice(0,16);
+    $('if-duration').value = inf.duration || '';
+    $('if-owner').value    = inf.ownerName || '';
+    $('if-note').value     = inf.note || '';
+    $('inf-form-title').textContent = 'עריכת פעילות 🎈';
+    $('inf-form').style.display = 'block';
+    $('inf-form').scrollIntoView({behavior:'smooth',block:'start'});
+  };
+
+  window.infClearOwner = async function(id) {
+    if (!confirm('לנקות את שם האחראי ולפתוח לשיבוץ מחדש?')) return;
+    try {
+      await updateDoc(doc(db,'inflatables',id), {ownerName: null});
+      const item = allInflatables.find(i=>i.id===id);
+      if (item) item.ownerName = null;
+      renderInfTable();
+      showToast('האחראי נוקה – הפעילות פתוחה לשיבוץ');
+    } catch(e) { showToast('שגיאה: '+e.message,true); }
+  };
+
+  window.infDelete = async function(id) {
+    if (!confirm('למחוק פעילות זו לצמיתות?')) return;
+    try {
+      await deleteDoc(doc(db,'inflatables',id));
+      allInflatables = allInflatables.filter(i=>i.id!==id);
+      $('inf-count').textContent = `(${allInflatables.length})`;
+      renderInfTable();
+      showToast('הפעילות נמחקה');
+    } catch(e) { showToast('שגיאה: '+e.message,true); }
+  };
+
+  $('btn-new-inf').addEventListener('click', () => {
+    infEditId = null;
+    ['if-datetime','if-duration','if-owner','if-note'].forEach(id=>{const el=$(id);if(el)el.value='';});
+    $('inf-form-title').textContent = 'פעילות חדשה 🎈';
+    $('inf-form').style.display = 'block';
+    $('inf-form').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  $('inf-cancel-btn').addEventListener('click', () => {
+    $('inf-form').style.display = 'none';
+    infEditId = null;
+  });
+
+  $('inf-save-btn').addEventListener('click', async () => {
+    const dtRaw = $('if-datetime').value;
+    if (!dtRaw) { showToast('חובה לבחור תאריך ושעה',true); return; }
+    const btn = $('inf-save-btn');
+    btn.disabled = true; btn.textContent = 'שומר...';
+    try {
+      const data = {
+        date:      new Date(dtRaw),
+        duration:  $('if-duration').value.trim() || null,
+        ownerName: $('if-owner').value.trim()    || null,
+        note:      $('if-note').value.trim()     || null,
+        updatedAt: serverTimestamp()
+      };
+      if (infEditId) {
+        await updateDoc(doc(db,'inflatables',infEditId), data);
+        showToast('✅ פעילות עודכנה');
+      } else {
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db,'inflatables'), data);
+        showToast('✅ פעילות נוספה');
+      }
+      $('inf-form').style.display = 'none';
+      infEditId = null;
+      await loadInflatables();
+    } catch(e) { showToast('שגיאה: '+e.message,true); }
+    btn.disabled = false; btn.textContent = '💾 שמור פעילות';
+  });
+  /* ══ END INFLATABLES ADMIN ══ */
 
   /* ══ UTILS ══ */
   function showToast(msg,isErr=false){toastEl.textContent=msg;toastEl.classList.toggle('err',isErr);toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),3400)}

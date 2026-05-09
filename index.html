@@ -306,7 +306,35 @@
     .btn-pay.alt:hover { background: rgba(200,136,42,.07); box-shadow: 0 6px 22px rgba(200,136,42,.32); }
     .btn-pay.disabled { background: rgba(180,160,130,.26); color: rgba(100,80,50,.38); box-shadow: none; pointer-events: none; }
 
-    /* poster */
+    /* ══ INFLATABLES ══ */
+    .inflatables-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 18px; }
+    .inf-card { background:#fff; border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden; transition:transform .22s,box-shadow .22s; }
+    .inf-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+    .inf-card-head { background:linear-gradient(135deg,#6b2fa0,#9b42d4); padding:18px 20px 14px; color:#fff; }
+    .inf-date-big { font-size:1.15rem; font-weight:800; margin-bottom:3px; }
+    .inf-time-row { display:flex; align-items:center; gap:7px; font-size:.88rem; opacity:.88; }
+    .inf-card-body { padding:16px 20px 18px; }
+    .inf-label { font-size:.72rem; font-weight:700; color:var(--text-soft); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+    .inf-owner-row { display:flex; align-items:center; gap:10px; }
+    .inf-owner-name { font-size:1rem; font-weight:700; color:var(--brown-dark); }
+    .inf-owner-empty { font-size:.9rem; color:var(--text-soft); font-style:italic; }
+    .btn-claim { margin-top:12px; width:100%; padding:11px; background:linear-gradient(135deg,#6b2fa0,#9b42d4); color:#fff; border:none; border-radius:var(--rb); font-family:var(--font); font-size:.9rem; font-weight:700; cursor:pointer; transition:opacity .2s,transform .2s; }
+    .btn-claim:hover { opacity:.88; transform:translateY(-1px); }
+    .btn-claim:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+    .inf-note { font-size:.78rem; color:var(--text-soft); margin-top:8px; }
+    /* claim modal */
+    .claim-modal-bg { position:fixed; inset:0; z-index:600; background:rgba(26,14,6,.55); backdrop-filter:blur(5px); display:none; align-items:center; justify-content:center; padding:20px; }
+    .claim-modal-bg.open { display:flex; }
+    .claim-modal { background:#fff; border-radius:20px; padding:32px 28px; max-width:380px; width:100%; box-shadow:0 20px 60px rgba(74,32,16,.25); }
+    .claim-modal h3 { font-size:1.2rem; font-weight:800; color:var(--brown-dark); margin-bottom:6px; }
+    .claim-modal p { font-size:.88rem; color:var(--text-soft); margin-bottom:20px; }
+    .claim-input { width:100%; padding:13px 16px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font); font-size:1rem; direction:rtl; outline:none; transition:border-color .2s; margin-bottom:14px; }
+    .claim-input:focus { border-color:#9b42d4; }
+    .claim-btns { display:flex; gap:10px; }
+    .btn-claim-confirm { flex:1; padding:12px; background:linear-gradient(135deg,#6b2fa0,#9b42d4); color:#fff; border:none; border-radius:var(--rb); font-family:var(--font); font-size:.95rem; font-weight:700; cursor:pointer; }
+    .btn-claim-cancel  { padding:12px 18px; background:transparent; border:1.5px solid var(--border); border-radius:var(--rb); font-family:var(--font); font-size:.95rem; cursor:pointer; color:var(--text-soft); }
+
+    /* ══ END INFLATABLES ══ */
     .poster-wrap { padding: 0 36px 36px; }
     .poster-label { font-size: .72rem; color: var(--text-soft); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
     .poster-thumb { border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); cursor: zoom-in; transition: all .28s; }
@@ -370,10 +398,11 @@
 <!-- Mobile drawer -->
 <div class="mobile-drawer" id="mobile-drawer">
   <nav class="mobile-drawer-nav">
-    <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🗓️</span>אירועים</button>
-    <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
-    <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
-    <button class="sidebar-link"        data-page="contact"     onclick="showPage('contact',this);closeDrawer()"><span class="link-icon">📞</span>יצירת קשר</button>
+    <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🗓️</span>אירועים</button>
+    <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
+    <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
+    <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
+    <button class="sidebar-link"        data-page="contact"      onclick="showPage('contact',this);closeDrawer()"><span class="link-icon">📞</span>יצירת קשר</button>
   </nav>
 </div>
 
@@ -396,6 +425,7 @@
 
     <nav class="sidebar-nav">
       <button class="sidebar-link active" data-page="events"     onclick="showPage('events',this)"><span class="link-icon">🗓️</span>אירועים</button>
+      <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
       <button class="sidebar-link"        data-page="playground" onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
       <button class="sidebar-link"        data-page="classes"    onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
       <button class="sidebar-link"        data-page="contact"    onclick="showPage('contact',this)"><span class="link-icon">📞</span>יצירת קשר</button>
@@ -421,6 +451,7 @@
       <div class="cat-tabs">
         <button class="cat-tab active" data-cat="all">🌟 הכל</button>
         <button class="cat-tab" data-cat="events">🗓️ במעגל השנה</button>
+        <button class="cat-tab" data-cat="inflatables">🎈 מתנפחים</button>
         <button class="cat-tab" data-cat="playground">🎠 משחקייה</button>
         <button class="cat-tab" data-cat="classes">🎨 חוגים</button>
       </div>
@@ -434,6 +465,22 @@
           <span class="section-count" id="events-count">0</span>
         </div>
         <div class="events-grid" id="events-grid">
+          <div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: INFLATABLES -->
+    <div class="page" id="page-inflatables">
+      <div class="info-hero" style="background:linear-gradient(135deg,#6b2fa0,#9b42d4,#c06aee)">
+        <div class="info-hero-overlay"></div>
+        <div class="info-hero-content">
+          <h2 class="info-hero-title">🎈 מתנפחים</h2>
+          <p class="info-hero-sub">לוח פעילויות מתנפחים – זמנים ואחראים</p>
+        </div>
+      </div>
+      <div class="section">
+        <div class="inflatables-grid" id="inflatables-grid">
           <div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
         </div>
       </div>
@@ -481,6 +528,19 @@
   <img id="lb-img" src="" alt="">
 </div>
 
+<!-- CLAIM MODAL -->
+<div class="claim-modal-bg" id="claim-modal-bg">
+  <div class="claim-modal">
+    <h3>🎈 הרשמה כאחראי</h3>
+    <p id="claim-modal-desc">רשום את שמך כאחראי על פעילות זו</p>
+    <input class="claim-input" id="claim-name-input" type="text" placeholder="שם מלא" maxlength="40">
+    <div class="claim-btns">
+      <button class="btn-claim-confirm" id="claim-confirm-btn">אני מתנדב!</button>
+      <button class="btn-claim-cancel"  id="claim-cancel-btn">ביטול</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -490,7 +550,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-  import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy }
+  import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, query, orderBy }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const FB = {
@@ -594,8 +654,8 @@
     });
   });
 
-  const CAT_LABEL = {events:'במעגל השנה', playground:'משחקייה', classes:'חוגים'};
-  const CAT_COLOR = {events:'#C8882Acc',   playground:'#3d8a3dcc', classes:'#2d5aa0cc'};
+  const CAT_LABEL = {events:'במעגל השנה', playground:'משחקייה', classes:'חוגים', inflatables:'מתנפחים'};
+  const CAT_COLOR = {events:'#C8882Acc', playground:'#3d8a3dcc', classes:'#2d5aa0cc', inflatables:'#9b42d4cc'};
 
   function deadline(ev) {
     if (!ev.registrationDeadline) return null;
@@ -756,7 +816,121 @@
   document.getElementById('lb-close').onclick=()=>lightbox.classList.remove('active');
   lightbox.onclick=e=>{ if(e.target===lightbox) lightbox.classList.remove('active'); };
 
-  await Promise.all([loadSettings(), loadEvents()]);
+  /* ══════════════ INFLATABLES ══════════════ */
+  let allInflatables = [];
+  let claimTargetId  = null;
+
+  async function loadInflatables() {
+    const grid = document.getElementById('inflatables-grid');
+    grid.innerHTML = `<div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>`;
+    try {
+      const q    = query(collection(db,'inflatables'), orderBy('date','asc'));
+      const snap = await getDocs(q);
+      allInflatables = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderInflatables();
+    } catch(e) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>שגיאה בטעינת המתנפחים</p></div>';
+      console.error(e);
+    }
+  }
+
+  function renderInflatables() {
+    const grid = document.getElementById('inflatables-grid');
+    const now  = new Date();
+    const list = allInflatables.filter(inf => {
+      const d = inf.date?.toDate ? inf.date.toDate() : new Date(inf.date);
+      return d >= now || isNaN(d);
+    });
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">🎈</div><p>אין פעילויות מתנפחים קרובות</p></div>';
+      return;
+    }
+    grid.innerHTML = list.map(inf => {
+      const d   = inf.date?.toDate ? inf.date.toDate() : new Date(inf.date);
+      const dateStr = isNaN(d) ? '' : d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      const timeStr = isNaN(d) ? '' : d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+      const hasOwner = !!inf.ownerName;
+      return `
+      <div class="inf-card">
+        <div class="inf-card-head">
+          <div class="inf-date-big">🎈 ${dateStr}</div>
+          <div class="inf-time-row">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            שעת פתיחה: <strong>${timeStr}</strong>
+            ${inf.duration ? `· משך: ${inf.duration}` : ''}
+          </div>
+        </div>
+        <div class="inf-card-body">
+          ${inf.note ? `<p style="font-size:.85rem;color:var(--text-mid);margin-bottom:12px">${inf.note}</p>` : ''}
+          <div class="inf-label">אחראי פעילות</div>
+          <div class="inf-owner-row">
+            <span style="font-size:1.4rem">${hasOwner ? '✅' : '🙋'}</span>
+            ${hasOwner
+              ? `<span class="inf-owner-name">${inf.ownerName}</span>`
+              : `<span class="inf-owner-empty">עדיין אין אחראי – אפשר להתנדב!</span>`
+            }
+          </div>
+          ${!hasOwner
+            ? `<button class="btn-claim" data-id="${inf.id}" data-date="${dateStr}" data-time="${timeStr}">אני מתנדב כאחראי 🙋</button>`
+            : `<p class="inf-note">תפוס – תודה ל${inf.ownerName}!</p>`
+          }
+        </div>
+      </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.btn-claim').forEach(btn => {
+      btn.addEventListener('click', () => {
+        claimTargetId = btn.dataset.id;
+        document.getElementById('claim-modal-desc').textContent =
+          `פעילות: ${btn.dataset.date} · ${btn.dataset.time}`;
+        document.getElementById('claim-name-input').value = '';
+        document.getElementById('claim-modal-bg').classList.add('open');
+        document.getElementById('claim-name-input').focus();
+      });
+    });
+  }
+
+  /* Claim handlers */
+  document.getElementById('claim-cancel-btn').addEventListener('click', () => {
+    document.getElementById('claim-modal-bg').classList.remove('open');
+    claimTargetId = null;
+  });
+
+  document.getElementById('claim-confirm-btn').addEventListener('click', async () => {
+    const name = document.getElementById('claim-name-input').value.trim();
+    if (!name) { document.getElementById('claim-name-input').focus(); return; }
+    const btn = document.getElementById('claim-confirm-btn');
+    btn.disabled = true; btn.textContent = 'שומר...';
+    try {
+      /* re-fetch to prevent race condition */
+      const snap = await getDoc(doc(db,'inflatables', claimTargetId));
+      if (snap.exists() && snap.data().ownerName) {
+        showToast('מישהו אחר כבר תפס את המשבצת הזו!', true);
+      } else {
+        await updateDoc(doc(db,'inflatables', claimTargetId), { ownerName: name });
+        const item = allInflatables.find(i=>i.id===claimTargetId);
+        if (item) item.ownerName = name;
+        showToast(`✅ ${name}, נרשמת בהצלחה כאחראי!`);
+        renderInflatables();
+      }
+    } catch(e) {
+      showToast('שגיאה בשמירה: ' + e.message, true);
+    }
+    btn.disabled = false; btn.textContent = 'אני מתנדב!';
+    document.getElementById('claim-modal-bg').classList.remove('open');
+    claimTargetId = null;
+  });
+
+  /* close claim modal on backdrop click */
+  document.getElementById('claim-modal-bg').addEventListener('click', e => {
+    if (e.target === document.getElementById('claim-modal-bg')) {
+      document.getElementById('claim-modal-bg').classList.remove('open');
+      claimTargetId = null;
+    }
+  });
+  /* ══════════════ END INFLATABLES ══════════════ */
+
+  await Promise.all([loadSettings(), loadEvents(), loadInflatables()]);
 </script>
 
 <!-- PAGE SWITCHING + BURGER (non-module) -->
