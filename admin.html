@@ -574,26 +574,24 @@
 
     if(id && ev){
       $('fm-title').textContent = currentCollection==='beitmidrash' ? 'עריכת שיעור/פעילות' : 'עריכת אירוע';
-      $('f-title').value=ev.title||'';
-      $('f-desc').value=ev.description||'';
-      $('f-adult').value=ev.priceAdult??'';
-      $('f-child').value=ev.priceChild??'';
-      $('f-child-note').value=ev.priceChildNote||'';
-      $('f-cat').value=ev.category||(currentCollection==='beitmidrash'?'beitmidrash':'events');
-      $('f-pinned').checked=!!ev.pinned;
-      $('f-form-url').value=ev.formLink||'';
-      $('f-form-label').value=ev.formLabel||'';
-        const d=dl(ev);
-        if(d&&!isNaN(d)) $('f-deadline').value=d.toISOString().slice(0,16);
-        if(ev.imageUrl){existingUrl=ev.imageUrl;$('upload-preview').src=ev.imageUrl;$('upload-preview').style.display='block'}
-        /* load existing pay buttons (max 2) */
-        const existing=[];
-        if(ev.paymentLink) existing.push({label:ev.paymentLabel||'לתשלום מאובטח',url:ev.paymentLink});
-        if(ev.paymentButtons) ev.paymentButtons.slice(0,2-existing.length).forEach(b=>existing.push(b));
-        existing.slice(0,2).forEach(b=>addPayRow(b.label,b.url));
-      }
+      $('f-title').value        = ev.title||'';
+      $('f-desc').value         = ev.description||'';
+      $('f-adult').value        = ev.priceAdult??'';
+      $('f-child').value        = ev.priceChild??'';
+      $('f-child-note').value   = ev.priceChildNote||'';
+      $('f-cat').value          = ev.category||(currentCollection==='beitmidrash'?'beitmidrash':'events');
+      $('f-pinned').checked     = !!ev.pinned;
+      $('f-form-url').value     = ev.formLink||'';
+      $('f-form-label').value   = ev.formLabel||'';
+      const d=dl(ev);
+      if(d&&!isNaN(d)) $('f-deadline').value=d.toISOString().slice(0,16);
+      if(ev.imageUrl){existingUrl=ev.imageUrl;$('upload-preview').src=ev.imageUrl;$('upload-preview').style.display='block'}
+      const existing=[];
+      if(ev.paymentLink) existing.push({label:ev.paymentLabel||'לתשלום מאובטח',url:ev.paymentLink});
+      if(ev.paymentButtons) ev.paymentButtons.slice(0,2-existing.length).forEach(b=>existing.push(b));
+      existing.slice(0,2).forEach(b=>addPayRow(b.label,b.url));
     } else {
-      $('fm-title').textContent='אירוע חדש';
+      $('fm-title').textContent = currentCollection==='beitmidrash' ? 'שיעור/פעילות חדשה' : 'אירוע חדש';
       addPayRow('לתשלום מאובטח','');
     }
 
