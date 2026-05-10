@@ -354,6 +354,29 @@
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: rgba(26,14,6,.94); border: 1px solid rgba(200,136,42,.35); color: #fff; font-size: .9rem; font-weight: 600; padding: 13px 26px; border-radius: var(--rb); z-index: 800; transition: transform .35s cubic-bezier(.22,.68,0,1.2); white-space: nowrap; backdrop-filter: blur(16px); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
+    /* ══ MONTHLY CALENDAR ══ */
+    .cal-section { padding: 32px 32px 0; max-width: 1060px; margin: 0 auto; }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .cal-nav { display: flex; align-items: center; gap: 10px; }
+    .cal-nav-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--brown-dark); width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .22s; }
+    .cal-nav-btn:hover { background: var(--bg2); border-color: var(--gold); color: var(--gold); }
+    .cal-month-label { font-size: 1.05rem; font-weight: 800; color: var(--brown-dark); min-width: 130px; text-align: center; }
+    .cal-legend { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 700; color: var(--text-soft); }
+    .cal-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-day-header { text-align: center; font-size: .68rem; font-weight: 800; color: var(--text-soft); padding: 6px 2px; text-transform: uppercase; letter-spacing: .04em; }
+    .cal-cell { min-height: 84px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 5px 6px; position: relative; transition: background .2s; }
+    .cal-cell.other-month { opacity: .38; }
+    .cal-cell.today { background: rgba(200,136,42,.07); border-color: rgba(200,136,42,.35); }
+    .cal-cell.today .cal-cell-num { color: var(--gold); font-weight: 900; background: rgba(200,136,42,.15); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+    .cal-cell-num { font-size: .78rem; font-weight: 700; color: var(--text-mid); margin-bottom: 3px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+    .cal-event-pill { font-size: .62rem; font-weight: 700; color: #fff; border-radius: 4px; padding: 1px 5px; margin-bottom: 2px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: opacity .18s; line-height: 1.5; }
+    .cal-event-pill:hover { opacity: .82; }
+    .cal-more { font-size: .62rem; color: var(--text-soft); font-weight: 700; cursor: pointer; padding: 1px 3px; }
+    .cal-more:hover { color: var(--gold); }
+    /* ══ END MONTHLY CALENDAR ══ */
+
     /* ══════════════════════ RESPONSIVE ══════════════════════ */
     @media (max-width: 900px) {
       .sidebar { display: none; } /* hidden – drawer used instead */
@@ -400,8 +423,8 @@
 <!-- Mobile drawer -->
 <div class="mobile-drawer" id="mobile-drawer">
   <nav class="mobile-drawer-nav">
-    <div class="sidebar-section-label" style="padding:10px 16px 4px;font-size:.7rem;color:var(--text-soft);font-weight:700;text-transform:uppercase;letter-spacing:.08em">אירועים</div>
     <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🌟</span>כלל האירועים</button>
+    <div style="height:1px;background:var(--border);margin:4px 16px 8px"></div>
     <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
     <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
     <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
@@ -429,8 +452,8 @@
     </div>
 
     <nav class="sidebar-nav">
-      <div class="sidebar-section-label">אירועים</div>
       <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this)"><span class="link-icon">🌟</span>כלל האירועים</button>
+      <div class="sidebar-divider"></div>
       <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
       <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
       <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
@@ -467,6 +490,18 @@
 
     <!-- PAGE: EVENTS -->
     <div class="page active" id="page-events">
+      <!-- MONTHLY CALENDAR -->
+      <div class="cal-section" id="cal-section">
+        <div class="cal-header">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" id="cal-prev">&#8250;</button>
+            <div class="cal-month-label" id="cal-month-label"></div>
+            <button class="cal-nav-btn" id="cal-next">&#8249;</button>
+          </div>
+          <div class="cal-legend" id="cal-legend"></div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
       <div class="section">
         <div class="section-hdr">
           <h2 class="section-title">אירועים קרובים</h2>
@@ -659,6 +694,7 @@
       const snap = await getDocs(q);
       allEvents  = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderCards(currentCat);
+      renderCalendar();
     } catch(e) {
       eventsGrid.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>שגיאה בטעינת האירועים</p></div>';
       console.error(e);
@@ -674,6 +710,7 @@
       const snap = await getDocs(q);
       allBM = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderBM();
+      renderCalendar();
     } catch(e) {
       grid.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>שגיאה בטעינת בית המדרש</p></div>';
       console.error(e);
@@ -783,6 +820,133 @@
       c.addEventListener('click', () => openDetail(c.dataset.id, c.dataset.bm==='1' ? allBM : allEvents));
     });
   }
+
+  /* ══ MONTHLY CALENDAR ══ */
+  const CAT_COLOR_SOLID = {
+    events:      '#C8882A',
+    playground:  '#3d8a3d',
+    classes:     '#2d5aa0',
+    inflatables: '#9b42d4',
+    beitmidrash: '#8B4513'
+  };
+
+  let calYear, calMonth;
+
+  function initCalendar() {
+    const now = new Date();
+    calYear  = now.getFullYear();
+    calMonth = now.getMonth();
+    renderCalendar();
+  }
+
+  function eventDate(ev) {
+    if (ev.registrationDeadline) {
+      const d = ev.registrationDeadline?.toDate ? ev.registrationDeadline.toDate() : new Date(ev.registrationDeadline);
+      if (!isNaN(d)) return d;
+    }
+    if (ev.createdAt?.toDate) return ev.createdAt.toDate();
+    return null;
+  }
+
+  function renderCalendar() {
+    const grid   = document.getElementById('cal-grid');
+    const label  = document.getElementById('cal-month-label');
+    const legend = document.getElementById('cal-legend');
+    if (!grid) return;
+
+    const monthNames = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+    label.textContent = `${monthNames[calMonth]} ${calYear}`;
+
+    /* gather all events with dates */
+    const allMerged = [
+      ...allEvents,
+      ...allBM.map(ev => ({...ev, category: ev.category||'beitmidrash', _isBM: true}))
+    ];
+    const eventsWithDates = allMerged.map(ev => ({ev, d: eventDate(ev)})).filter(x => x.d && !isNaN(x.d));
+
+    /* legend – only categories that have events */
+    const usedCats = [...new Set(eventsWithDates.map(x => x.ev.category||'events'))];
+    legend.innerHTML = usedCats.map(cat => `
+      <div class="cal-legend-item">
+        <div class="cal-legend-dot" style="background:${CAT_COLOR_SOLID[cat]||CAT_COLOR_SOLID.events}"></div>
+        ${CAT_LABEL[cat]||cat}
+      </div>`).join('');
+
+    /* build calendar cells */
+    const firstDay = new Date(calYear, calMonth, 1);
+    /* Hebrew calendar: week starts Sunday=0, we want Sun on left */
+    let startDow = firstDay.getDay(); /* 0=Sun */
+    /* In RTL layout with Hebrew week Sun–Sat, index as-is */
+    const daysInMonth   = new Date(calYear, calMonth+1, 0).getDate();
+    const daysInPrevMon = new Date(calYear, calMonth, 0).getDate();
+    const today = new Date();
+
+    const dayHeaders = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+    let html = dayHeaders.map(d => `<div class="cal-day-header">${d}</div>`).join('');
+
+    /* prev month filler */
+    for (let i = startDow - 1; i >= 0; i--) {
+      const dayNum = daysInPrevMon - i;
+      html += `<div class="cal-cell other-month"><div class="cal-cell-num">${dayNum}</div></div>`;
+    }
+
+    /* current month */
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday = today.getFullYear()===calYear && today.getMonth()===calMonth && today.getDate()===day;
+      const cellDate = new Date(calYear, calMonth, day);
+
+      /* events on this day */
+      const dayEvents = eventsWithDates.filter(x => {
+        const d = x.d;
+        return d.getFullYear()===calYear && d.getMonth()===calMonth && d.getDate()===day;
+      });
+
+      const maxShow = 3;
+      const pillsHtml = dayEvents.slice(0, maxShow).map(x => {
+        const col = CAT_COLOR_SOLID[x.ev.category||'events'] || CAT_COLOR_SOLID.events;
+        const isBM = x.ev._isBM ? '1' : '0';
+        return `<div class="cal-event-pill" style="background:${col}" data-cal-id="${x.ev.id}" data-cal-bm="${isBM}" title="${x.ev.title}">${x.ev.title}</div>`;
+      }).join('');
+      const moreHtml = dayEvents.length > maxShow
+        ? `<div class="cal-more">+${dayEvents.length - maxShow} עוד</div>` : '';
+
+      html += `<div class="cal-cell${isToday?' today':''}">
+        <div class="cal-cell-num">${day}</div>
+        ${pillsHtml}${moreHtml}
+      </div>`;
+    }
+
+    /* next month filler to complete last row */
+    const totalCells = startDow + daysInMonth;
+    const remainder  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remainder; i++) {
+      html += `<div class="cal-cell other-month"><div class="cal-cell-num">${i}</div></div>`;
+    }
+
+    grid.innerHTML = html;
+
+    /* attach click handlers to pills */
+    grid.querySelectorAll('.cal-event-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id   = pill.dataset.calId;
+        const isBM = pill.dataset.calBm === '1';
+        openDetail(id, isBM ? allBM : allEvents);
+      });
+    });
+  }
+
+  document.getElementById('cal-prev').addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  document.getElementById('cal-next').addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+  /* ══ END MONTHLY CALENDAR ══ */
 
   /* ── DETAIL ── */
   function openDetail(id, eventsList) {
@@ -1023,6 +1187,7 @@
   });
   /* ══════════════ END INFLATABLES ══════════════ */
 
+  initCalendar();
   await Promise.all([loadSettings(), loadEvents(), loadInflatables(), loadBeitMidrash()]);
 </script>
 
