@@ -99,6 +99,8 @@
     .sidebar-link:hover { background: var(--bg2); color: var(--brown-dark); }
     .sidebar-link.active { background: rgba(200,136,42,.12); color: var(--gold); }
     .sidebar-link .link-icon { font-size: 1.15rem; flex-shrink: 0; }
+    .sidebar-section-label { padding: 16px 20px 4px; font-size: .68rem; font-weight: 800; color: var(--text-soft); text-transform: uppercase; letter-spacing: .1em; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 16px; }
 
     /* ── MOBILE TOPBAR ── */
     .topbar {
@@ -454,11 +456,13 @@
 <!-- Mobile drawer -->
 <div class="mobile-drawer" id="mobile-drawer">
   <nav class="mobile-drawer-nav">
-    <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🗓️</span>אירועים</button>
-    <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
-    <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
+    <div class="sidebar-section-label" style="padding:10px 16px 4px;font-size:.7rem;color:var(--text-soft);font-weight:700;text-transform:uppercase;letter-spacing:.08em">אירועים</div>
+    <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🌟</span>כלל האירועים</button>
     <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
     <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
+    <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
+    <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
+    <div style="height:1px;background:var(--border);margin:8px 16px"></div>
     <button class="sidebar-link"        data-page="contact"      onclick="showPage('contact',this);closeDrawer()"><span class="link-icon">📞</span>יצירת קשר</button>
   </nav>
 </div>
@@ -481,11 +485,14 @@
     </div>
 
     <nav class="sidebar-nav">
-      <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this)"><span class="link-icon">🗓️</span>אירועים</button>
-      <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
-      <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">אירועים</div>
+      <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this)"><span class="link-icon">🌟</span>כלל האירועים</button>
       <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
       <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
+      <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
+      <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
+      <div class="sidebar-divider"></div>
       <button class="sidebar-link"        data-page="contact"     onclick="showPage('contact',this)"><span class="link-icon">📞</span>יצירת קשר</button>
     </nav>
   </aside>
@@ -509,10 +516,9 @@
       <div class="cat-tabs">
         <button class="cat-tab active" data-cat="all">🌟 הכל</button>
         <button class="cat-tab" data-cat="events">🗓️ במעגל השנה</button>
-        <button class="cat-tab" data-cat="beitmidrash">📖 בית מדרש</button>
-        <button class="cat-tab" data-cat="inflatables">🎈 מתנפחים</button>
         <button class="cat-tab" data-cat="playground">🎠 משחקייה</button>
         <button class="cat-tab" data-cat="classes">🎨 חוגים</button>
+        <button class="cat-tab" data-cat="beitmidrash">📖 בית מדרש קהילתי</button>
       </div>
     </div>
 
@@ -736,7 +742,12 @@
   function isClosed(ev) { const d=deadline(ev); return d&&!isNaN(d)&&d<=new Date(); }
 
   function renderCards(cat) {
-    const list = cat==='all' ? allEvents : allEvents.filter(ev=>(ev.category||'events')===cat);
+    const merged = [
+      ...allEvents,
+      ...allBM.map(ev => ({...ev, category: ev.category||'beitmidrash', _isBM: true}))
+    ];
+    let list = cat==='all' ? merged : merged.filter(ev=>(ev.category||'events')===cat);
+    list = [...list].sort((a,b) => (a.pinned&&!b.pinned)?-1:(!a.pinned&&b.pinned)?1:0);
     eventsCount.textContent = list.length;
     if (!list.length) { eventsGrid.innerHTML='<div class="empty"><div class="empty-icon">🗓️</div><p>אין אירועים בקטגוריה זו</p></div>'; return; }
     eventsGrid.innerHTML = list.map(ev => {
@@ -745,7 +756,7 @@
       const cl = isClosed(ev);
       const ck = ev.category||'events';
       return `
-      <article class="event-card" data-id="${ev.id}" role="button" tabindex="0">
+      <article class="event-card${ev.pinned?' pinned':''}" data-id="${ev.id}" data-bm="${ev._isBM?'1':'0'}" role="button" tabindex="0">
         <div class="card-img">
           ${ev.imageUrl
             ? `<img src="${ev.imageUrl}" alt="${ev.title}" loading="lazy">`
@@ -754,6 +765,7 @@
                 : `<svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(200,136,42,.4)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`
               }</div>`
           }
+          ${ev.pinned ? '<span class="card-pinned-badge">📌 נעוץ</span>' : ''}
           <span class="card-cat-badge" style="background:${CAT_COLOR[ck]||CAT_COLOR.events}">${CAT_LABEL[ck]||ck}</span>
           ${cl ? '<span class="card-closed">⛔ הרשמה סגורה</span>' : ''}
         </div>
@@ -767,7 +779,9 @@
         </div>
       </article>`;
     }).join('');
-    document.querySelectorAll('.event-card').forEach(c=>c.addEventListener('click',()=>openDetail(c.dataset.id)));
+    document.querySelectorAll('.event-card').forEach(c => {
+      c.addEventListener('click', () => openDetail(c.dataset.id, c.dataset.bm==='1' ? allBM : allEvents));
+    });
   }
 
   /* ── DETAIL ── */
