@@ -354,6 +354,27 @@
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: rgba(26,14,6,.94); border: 1px solid rgba(200,136,42,.35); color: #fff; font-size: .9rem; font-weight: 600; padding: 13px 26px; border-radius: var(--rb); z-index: 800; transition: transform .35s cubic-bezier(.22,.68,0,1.2); white-space: nowrap; backdrop-filter: blur(16px); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
+    /* ══ TODAY POPUP ══ */
+    .today-popup-bg { position: fixed; inset: 0; z-index: 900; background: rgba(26,14,6,.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .38s; pointer-events: none; }
+    .today-popup-bg.show { opacity: 1; pointer-events: all; }
+    .today-popup { background: #fff; border-radius: 22px; max-width: 420px; width: 100%; box-shadow: 0 24px 72px rgba(74,32,16,.28); overflow: hidden; transform: translateY(24px) scale(.97); transition: transform .38s cubic-bezier(.22,.68,0,1.2); }
+    .today-popup-bg.show .today-popup { transform: translateY(0) scale(1); }
+    .today-popup-hero { height: 180px; position: relative; overflow: hidden; background: var(--grad); }
+    .today-popup-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .today-popup-hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(26,14,6,.1) 0%,rgba(26,14,6,.75) 100%); }
+    .today-popup-close { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; z-index: 2; }
+    .today-popup-close:hover { background: rgba(255,255,255,.32); }
+    .today-popup-badge { position: absolute; bottom: 46px; right: 18px; font-size: .68rem; font-weight: 700; letter-spacing: 1.5px; color: var(--sand); background: rgba(26,14,6,.5); border: 1px solid rgba(232,192,128,.3); padding: 3px 12px; border-radius: 20px; text-transform: uppercase; z-index: 2; }
+    .today-popup-title { position: absolute; bottom: 14px; right: 18px; left: 44px; font-size: 1.25rem; font-weight: 900; color: #fff; line-height: 1.2; z-index: 2; text-shadow: 0 2px 10px rgba(0,0,0,.4); }
+    .today-popup-body { padding: 20px 22px 22px; }
+    .today-popup-cd-label { font-size: .68rem; letter-spacing: 2px; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+    .today-popup-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .today-popup-btn-main { flex: 1; padding: 12px; background: var(--grad); color: var(--brown-dark); font-family: var(--font); font-size: .9rem; font-weight: 800; border: none; border-radius: var(--rb); cursor: pointer; transition: all .25s; }
+    .today-popup-btn-main:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,136,42,.4); }
+    .today-popup-btn-close { padding: 12px 18px; background: transparent; border: 1.5px solid var(--border); border-radius: var(--rb); font-family: var(--font); font-size: .9rem; cursor: pointer; color: var(--text-soft); transition: all .22s; }
+    .today-popup-btn-close:hover { border-color: var(--gold); color: var(--gold); }
+    /* ══ END TODAY POPUP ══ */
+
     /* ══ MONTHLY CALENDAR ══ */
     .cal-section { padding: 20px 20px 48px; max-width: 1060px; margin: 0 auto; }
     .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
@@ -446,6 +467,7 @@
     <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
     <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
     <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
+    <button class="sidebar-link"        data-page="mishu"        onclick="showPage('mishu',this);closeDrawer()"><span class="link-icon">🎭</span>משו לנפש</button>
     <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
     <button class="sidebar-link" id="mob-sb-vaada" style="display:none" onclick="openVaada();closeDrawer()"><span class="link-icon">🤰</span>ועדת יולדות <span style="font-size:.65rem;opacity:.6;margin-right:auto">↗</span></button>
     <div style="height:1px;background:var(--border);margin:8px 16px"></div>
@@ -476,6 +498,7 @@
       <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
       <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
       <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
+      <button class="sidebar-link"        data-page="mishu"       onclick="showPage('mishu',this)"><span class="link-icon">🎭</span>משו לנפש</button>
       <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
       <button class="sidebar-link sidebar-ext-link" id="sb-vaada" style="display:none" onclick="openVaada()"><span class="link-icon">🤰</span>ועדת יולדות <span style="font-size:.65rem;opacity:.6;margin-right:auto">↗</span></button>
       <div class="sidebar-divider"></div>
@@ -551,6 +574,26 @@
       </div>
     </div>
 
+    <!-- PAGE: MISHU LANEFESH -->
+    <div class="page" id="page-mishu">
+      <div class="info-hero" style="background:linear-gradient(135deg,#8b1a4a,#d4437a,#e87aaa)">
+        <div class="info-hero-overlay"></div>
+        <div class="info-hero-content">
+          <h2 class="info-hero-title">🎭 משו לנפש</h2>
+          <p class="info-hero-sub">פעילויות ואירועי העשרה לנפש</p>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hdr">
+          <h2 class="section-title">🎭 משו לנפש</h2>
+          <span class="section-count" id="mishu-count">0</span>
+        </div>
+        <div class="events-grid" id="mishu-grid">
+          <div class="loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- PAGE: INFLATABLES -->
     <div class="page" id="page-inflatables">
       <div class="info-hero" style="background:linear-gradient(135deg,#6b2fa0,#9b42d4,#c06aee)">
@@ -618,6 +661,26 @@
     <div class="claim-btns">
       <button class="btn-claim-confirm" id="claim-confirm-btn">אני מתנדב!</button>
       <button class="btn-claim-cancel"  id="claim-cancel-btn">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- TODAY EVENT POPUP -->
+<div class="today-popup-bg" id="today-popup-bg">
+  <div class="today-popup" id="today-popup">
+    <div class="today-popup-hero" id="today-popup-hero">
+      <button class="today-popup-close" id="today-popup-close-x">✕</button>
+      <div class="today-popup-hero-overlay"></div>
+      <div class="today-popup-badge" id="today-popup-badge">📅 היום</div>
+      <div class="today-popup-title" id="today-popup-title"></div>
+    </div>
+    <div class="today-popup-body">
+      <div class="today-popup-cd-label">⏳ ספירה לאחור</div>
+      <div id="today-popup-cd"></div>
+      <div class="today-popup-actions">
+        <button class="today-popup-btn-main" id="today-popup-detail">לפרטי האירוע ›</button>
+        <button class="today-popup-btn-close" id="today-popup-close">סגור</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1249,8 +1312,146 @@
   });
   /* ══════════════ END INFLATABLES ══════════════ */
 
+  /* ══ MISHU LANEFESH PAGE ══ */
+  function renderMishuPage() {
+    const grid  = document.getElementById('mishu-grid');
+    const cnt   = document.getElementById('mishu-count');
+    if (!grid) return;
+    const list = allEvents.filter(ev => (ev.category||'events') === 'mishu');
+    cnt.textContent = list.length;
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">🎭</div><p>אין פעילויות משו לנפש כרגע</p></div>';
+      return;
+    }
+    grid.innerHTML = list.map(ev => {
+      const d  = deadline(ev);
+      const ds = d&&!isNaN(d) ? d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+      const cl = isClosed(ev);
+      return `
+      <article class="event-card${ev.pinned?' pinned':''}" data-id="${ev.id}" data-bm="0" role="button" tabindex="0">
+        <div class="card-img">
+          ${ev.imageUrl
+            ? `<img src="${ev.imageUrl}" alt="${ev.title}" loading="lazy">`
+            : `<div class="card-ph">${settings.logoUrl
+                ? `<img src="${settings.logoUrl}" alt="לוגו" style="width:100%;height:100%;object-fit:cover;opacity:.13;filter:grayscale(1) blur(1px)" onerror="this.style.display='none'">`
+                : `<svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="rgba(212,67,122,.4)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>`
+              }</div>`
+          }
+          <span class="card-cat-badge" style="background:#d4437acc">🎭 משו לנפש</span>
+          ${ev.pinned ? '<span class="card-pinned-badge">📌 נעוץ</span>' : ''}
+          ${cl ? '<span class="card-closed">⛔ הרשמה סגורה</span>' : ''}
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">${ev.title}</h3>
+          <p class="card-desc">${ev.description||''}</p>
+          <div class="card-meta">
+            ${ds ? `<span class="card-meta-item"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>${ds}</span>` : ''}
+            <span class="card-meta-item"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>מבוגר ₪${ev.priceAdult||0} | ילד ₪${ev.priceChild||0}</span>
+          </div>
+        </div>
+      </article>`;
+    }).join('');
+    grid.querySelectorAll('.event-card').forEach(c =>
+      c.addEventListener('click', () => openDetail(c.dataset.id, allEvents))
+    );
+  }
+  /* ══ END MISHU LANEFESH ══ */
+
+  /* ══ TODAY EVENT POPUP ══ */
+  let popupCdInterval = null;
+
+  function initTodayPopup() {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd   = new Date(todayStart.getTime() + 86400000);
+
+    /* gather all events that happen today (by registrationDeadline date) */
+    const allMerged = [
+      ...allEvents,
+      ...allBM.map(ev => ({...ev, _isBM: true}))
+    ];
+    const todayEvents = allMerged
+      .map(ev => {
+        const d = deadline(ev);
+        return {ev, d};
+      })
+      .filter(x => x.d && !isNaN(x.d) && x.d >= todayStart && x.d < todayEnd)
+      .sort((a, b) => a.d - b.d); /* sort by time ascending */
+
+    if (!todayEvents.length) return; /* no events today */
+
+    const {ev, d} = todayEvents[0]; /* earliest event today */
+
+    /* populate popup */
+    const heroEl    = document.getElementById('today-popup-hero');
+    const titleEl   = document.getElementById('today-popup-title');
+    const badgeEl   = document.getElementById('today-popup-badge');
+    const cdEl      = document.getElementById('today-popup-cd');
+    const detailBtn = document.getElementById('today-popup-detail');
+
+    titleEl.textContent = ev.title;
+
+    /* set hero image */
+    if (ev.imageUrl) {
+      const img = document.createElement('img');
+      img.src = ev.imageUrl; img.alt = ev.title;
+      heroEl.insertBefore(img, heroEl.firstChild);
+    }
+
+    /* badge with time */
+    const timeStr = d.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+    badgeEl.textContent = `📅 היום · ${timeStr}`;
+
+    /* countdown */
+    function popupTick() {
+      const diff = d - new Date();
+      if (diff <= 0) {
+        cdEl.innerHTML = '<div class="cd-closed" style="font-size:.85rem">⏰ האירוע התחיל!</div>';
+        clearInterval(popupCdInterval);
+        return;
+      }
+      const hrs  = Math.floor(diff / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      cdEl.innerHTML = `<div class="cd-timer" style="justify-content:center">
+        <div class="cd-unit"><span class="cd-num" style="font-size:1.5rem">${pad(hrs)}</span><span class="cd-word">שעות</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-unit"><span class="cd-num" style="font-size:1.5rem">${pad(mins)}</span><span class="cd-word">דקות</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-unit"><span class="cd-num" style="font-size:1.5rem">${pad(secs)}</span><span class="cd-word">שניות</span></div>
+      </div>`;
+    }
+    popupTick();
+    popupCdInterval = setInterval(popupTick, 1000);
+
+    /* open detail on click */
+    detailBtn.addEventListener('click', () => {
+      closeTodayPopup();
+      openDetail(ev.id, ev._isBM ? allBM : allEvents);
+    });
+
+    /* show popup after short delay */
+    setTimeout(() => {
+      document.getElementById('today-popup-bg').classList.add('show');
+    }, 800);
+  }
+
+  function closeTodayPopup() {
+    clearInterval(popupCdInterval);
+    document.getElementById('today-popup-bg').classList.remove('show');
+  }
+
+  document.getElementById('today-popup-close').addEventListener('click', closeTodayPopup);
+  document.getElementById('today-popup-close-x').addEventListener('click', closeTodayPopup);
+  document.getElementById('today-popup-bg').addEventListener('click', e => {
+    if (e.target === document.getElementById('today-popup-bg')) closeTodayPopup();
+  });
+  /* ══ END TODAY EVENT POPUP ══ */
+
   initCalendar();
   await Promise.all([loadSettings(), loadEvents(), loadInflatables(), loadBeitMidrash()]);
+  renderMishuPage();
+  initTodayPopup();
 </script>
 
 <!-- PAGE SWITCHING + BURGER (non-module) -->
