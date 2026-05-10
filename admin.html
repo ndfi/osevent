@@ -835,7 +835,7 @@
     const ev = allBM.find(e=>e.id===id);
     if (!ev) return;
     // reuse the events form modal
-    openForm(id, ev, 'bm');
+    openForm(id, ev, 'beitmidrash');
   };
 
   window.bmDelete = async function(id) {
@@ -861,7 +861,7 @@
     });
   }
 
-  $('btn-new-bm').addEventListener('click', () => openForm(null, null, 'bm'));
+  $('btn-new-bm').addEventListener('click', () => openForm(null, null, 'beitmidrash'));
   /* ══ END BEIT MIDRASH ADMIN ══ */
   let allInflatables = [], infEditId = null;
 
