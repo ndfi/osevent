@@ -335,6 +335,8 @@
           <div class="sc-title"><span class="ic">📞</span> יצירת קשר</div>
           <div class="fg"><label>טלפון</label><input class="fi" id="s-phone" placeholder="050-1234567" type="tel"></div>
           <div class="fg"><label>WhatsApp</label><input class="fi" id="s-wa" placeholder="050-1234567" type="tel"></div>
+          <div class="fg"><label>עמוד פייסבוק – קישור</label><input class="fi" id="s-facebook" placeholder="https://facebook.com/..." type="url"></div>
+          <div class="fg"><label>ועדת יולדות – קישור חיצוני</label><input class="fi" id="s-vaada" placeholder="https://..." type="url"></div>
           <button class="btn-ss" id="save-contact">שמור</button>
         </div>
 
@@ -397,6 +399,7 @@
         <option value="playground">🎠 משחקייה</option>
         <option value="classes">🎨 חוגים</option>
         <option value="beitmidrash">📖 בית מדרש קהילתי</option>
+        <option value="mishu">🎭 משו לנפש</option>
       </select>
     </div>
 
@@ -753,11 +756,13 @@
 
   function applySettingsUI(){
     const s=settingsData;
-    if(s.orgName)  $('s-org').value  =s.orgName;
-    if(s.logoUrl)  $('s-logo').value =s.logoUrl;
-    if(s.heroBgUrl)$('s-hero').value =s.heroBgUrl;
-    if(s.phone)    $('s-phone').value=s.phone;
-    if(s.whatsapp) $('s-wa').value   =s.whatsapp;
+    if(s.orgName)     $('s-org').value    =s.orgName;
+    if(s.logoUrl)     $('s-logo').value   =s.logoUrl;
+    if(s.heroBgUrl)   $('s-hero').value   =s.heroBgUrl;
+    if(s.phone)       $('s-phone').value  =s.phone;
+    if(s.whatsapp)    $('s-wa').value     =s.whatsapp;
+    if(s.facebookUrl) $('s-facebook').value=s.facebookUrl;
+    if(s.vaadaUrl)    $('s-vaada').value  =s.vaadaUrl;
     renderPiList('pi-play',  s.playgroundItems||[]);
     renderPiList('pi-class', s.classItems||[]);
   }
@@ -773,7 +778,7 @@
   }
 
   $('save-gen').onclick   = ()=>saveSettings({orgName:$('s-org').value.trim(),logoUrl:$('s-logo').value.trim(),heroBgUrl:$('s-hero').value.trim()});
-  $('save-contact').onclick=()=>saveSettings({phone:$('s-phone').value.trim(),whatsapp:$('s-wa').value.trim()});
+  $('save-contact').onclick=()=>saveSettings({phone:$('s-phone').value.trim(),whatsapp:$('s-wa').value.trim(),facebookUrl:$('s-facebook').value.trim(),vaadaUrl:$('s-vaada').value.trim()});
   $('save-play').onclick  = ()=>saveSettings({playgroundItems:collectPi('pi-play')});
   $('save-class').onclick = ()=>saveSettings({classItems:collectPi('pi-class')});
   $('add-play').onclick   = ()=>addPiRow('pi-play');

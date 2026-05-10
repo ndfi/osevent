@@ -447,6 +447,7 @@
     <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
     <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
     <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
+    <button class="sidebar-link" id="mob-sb-vaada" style="display:none" onclick="openVaada();closeDrawer()"><span class="link-icon">🤰</span>ועדת יולדות <span style="font-size:.65rem;opacity:.6;margin-right:auto">↗</span></button>
     <div style="height:1px;background:var(--border);margin:8px 16px"></div>
     <button class="sidebar-link"        data-page="contact"      onclick="showPage('contact',this);closeDrawer()"><span class="link-icon">📞</span>יצירת קשר</button>
   </nav>
@@ -476,6 +477,7 @@
       <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
       <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
       <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
+      <button class="sidebar-link sidebar-ext-link" id="sb-vaada" style="display:none" onclick="openVaada()"><span class="link-icon">🤰</span>ועדת יולדות <span style="font-size:.65rem;opacity:.6;margin-right:auto">↗</span></button>
       <div class="sidebar-divider"></div>
       <button class="sidebar-link"        data-page="contact"     onclick="showPage('contact',this)"><span class="link-icon">📞</span>יצירת קשר</button>
     </nav>
@@ -504,6 +506,7 @@
         <button class="cat-tab" data-cat="playground">🎠 משחקייה</button>
         <button class="cat-tab" data-cat="classes">🎨 חוגים</button>
         <button class="cat-tab" data-cat="beitmidrash">📖 בית מדרש קהילתי</button>
+        <button class="cat-tab" data-cat="mishu">🎭 משו לנפש</button>
       </div>
     </div>
 
@@ -679,6 +682,14 @@
     if (settings.heroBgUrl) {
       document.getElementById('hero-bg').innerHTML = `<img src="${settings.heroBgUrl}" alt="" onerror="this.remove()">`;
     }
+    /* Vaada button – show only if URL is set */
+    const vaadaUrl = settings.vaadaUrl || '';
+    ['sb-vaada','mob-sb-vaada'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = vaadaUrl ? '' : 'none';
+    });
+    window._vaadaUrl = vaadaUrl;
+
     renderContact();
     if (settings.playgroundItems) renderPayPage('playground-cards', settings.playgroundItems, '#3d8a3d');
     if (settings.classItems)      renderPayPage('classes-cards',    settings.classItems,      '#2d5aa0');
@@ -686,13 +697,17 @@
 
   function renderContact() {
     const grid = document.getElementById('contact-grid');
-    const ph   = settings.phone    || '';
-    const wa   = settings.whatsapp || ph;
-    if (!ph && !wa) { grid.innerHTML = '<p style="color:var(--text-soft);padding:40px 0">פרטי קשר לא הוגדרו עדיין</p>'; return; }
-    const waNum = '972' + (wa||'').replace(/^0/,'').replace(/\D/g,'');
-    grid.innerHTML = `
-      ${ph ? `<a class="contact-card" href="tel:${ph.replace(/\D/g,'')}"><div class="contact-icon">📞</div><div class="contact-label">שיחת טלפון</div><div class="contact-value">${ph}</div></a>` : ''}
-      ${wa ? `<a class="contact-card" href="https://wa.me/${waNum}" target="_blank" rel="noopener"><div class="contact-icon">💬</div><div class="contact-label">WhatsApp</div><div class="contact-value">${wa}</div></a>` : ''}`;
+    const ph   = settings.phone      || '';
+    const wa   = settings.whatsapp   || ph;
+    const fb   = settings.facebookUrl|| '';
+    const cards = [];
+    if (ph) cards.push(`<a class="contact-card" href="tel:${ph.replace(/\D/g,'')}"><div class="contact-icon">📞</div><div class="contact-label">שיחת טלפון</div><div class="contact-value">${ph}</div></a>`);
+    if (wa) {
+      const waNum = '972' + wa.replace(/^0/,'').replace(/\D/g,'');
+      cards.push(`<a class="contact-card" href="https://wa.me/${waNum}" target="_blank" rel="noopener"><div class="contact-icon">💬</div><div class="contact-label">WhatsApp</div><div class="contact-value">${wa}</div></a>`);
+    }
+    if (fb) cards.push(`<a class="contact-card" href="${fb}" target="_blank" rel="noopener"><div class="contact-icon">📘</div><div class="contact-label">פייסבוק</div><div class="contact-value">עמוד הקהילה</div></a>`);
+    grid.innerHTML = cards.length ? cards.join('') : '<p style="color:var(--text-soft);padding:40px 0">פרטי קשר לא הוגדרו עדיין</p>';
   }
 
   function renderPayPage(id, items, color) {
@@ -804,8 +819,8 @@
     renderCalendar();
   };
 
-  const CAT_LABEL = {events:'במעגל השנה', playground:'משחקייה', classes:'חוגים', inflatables:'מתנפחים', beitmidrash:'בית מדרש קהילתי'};
-  const CAT_COLOR = {events:'#C8882Acc', playground:'#3d8a3dcc', classes:'#2d5aa0cc', inflatables:'#9b42d4cc', beitmidrash:'#8B4513cc'};
+  const CAT_LABEL = {events:'במעגל השנה', playground:'משחקייה', classes:'חוגים', inflatables:'מתנפחים', beitmidrash:'בית מדרש קהילתי', mishu:'משו לנפש'};
+  const CAT_COLOR = {events:'#C8882Acc', playground:'#3d8a3dcc', classes:'#2d5aa0cc', inflatables:'#9b42d4cc', beitmidrash:'#8B4513cc', mishu:'#d4437acc'};
 
   function deadline(ev) {
     if (!ev.registrationDeadline) return null;
@@ -862,7 +877,8 @@
     playground:  '#3d8a3d',
     classes:     '#2d5aa0',
     inflatables: '#9b42d4',
-    beitmidrash: '#8B4513'
+    beitmidrash: '#8B4513',
+    mishu:       '#d4437a'
   };
 
   let calYear, calMonth;
@@ -1272,6 +1288,11 @@
     drawer.classList.remove('open');
     backdrop.classList.remove('show');
     burger.classList.remove('open');
+  }
+
+  function openVaada() {
+    const url = window._vaadaUrl;
+    if (url) window.open(url, '_blank', 'noopener');
   }
 </script>
 </body>
