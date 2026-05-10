@@ -355,26 +355,44 @@
     .toast.show { transform: translateX(-50%) translateY(0); }
 
     /* ══ MONTHLY CALENDAR ══ */
-    .cal-section { padding: 32px 32px 0; max-width: 1060px; margin: 0 auto; }
-    .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
-    .cal-nav { display: flex; align-items: center; gap: 10px; }
-    .cal-nav-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--brown-dark); width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .22s; }
+    .cal-section { padding: 20px 20px 48px; max-width: 1060px; margin: 0 auto; }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .cal-nav { display: flex; align-items: center; gap: 8px; }
+    .cal-nav-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--brown-dark); width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .22s; flex-shrink: 0; }
     .cal-nav-btn:hover { background: var(--bg2); border-color: var(--gold); color: var(--gold); }
-    .cal-month-label { font-size: 1.05rem; font-weight: 800; color: var(--brown-dark); min-width: 130px; text-align: center; }
-    .cal-legend { display: flex; gap: 10px; flex-wrap: wrap; }
-    .cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 700; color: var(--text-soft); }
-    .cal-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cal-month-label { font-size: 1rem; font-weight: 800; color: var(--brown-dark); min-width: 110px; text-align: center; }
+    .cal-legend { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: .7rem; font-weight: 700; color: var(--text-soft); }
+    .cal-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-    .cal-day-header { text-align: center; font-size: .68rem; font-weight: 800; color: var(--text-soft); padding: 6px 2px; text-transform: uppercase; letter-spacing: .04em; }
-    .cal-cell { min-height: 84px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 5px 6px; position: relative; transition: background .2s; }
-    .cal-cell.other-month { opacity: .38; }
+    .cal-day-header { text-align: center; font-size: .65rem; font-weight: 800; color: var(--text-soft); padding: 5px 1px; }
+    .cal-cell { min-height: 80px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 4px 4px 3px; position: relative; overflow: hidden; transition: background .2s; }
+    .cal-cell.other-month { opacity: .32; }
     .cal-cell.today { background: rgba(200,136,42,.07); border-color: rgba(200,136,42,.35); }
-    .cal-cell.today .cal-cell-num { color: var(--gold); font-weight: 900; background: rgba(200,136,42,.15); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
-    .cal-cell-num { font-size: .78rem; font-weight: 700; color: var(--text-mid); margin-bottom: 3px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
-    .cal-event-pill { font-size: .62rem; font-weight: 700; color: #fff; border-radius: 4px; padding: 1px 5px; margin-bottom: 2px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: opacity .18s; line-height: 1.5; }
+    .cal-cell.today .cal-cell-num { color: var(--gold); font-weight: 900; background: rgba(200,136,42,.18); border-radius: 50%; }
+    .cal-cell-num { font-size: .72rem; font-weight: 700; color: var(--text-mid); margin-bottom: 2px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+    .cal-event-pill { font-size: .58rem; font-weight: 700; color: #fff; border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: opacity .18s; line-height: 1.5; display: block; }
     .cal-event-pill:hover { opacity: .82; }
-    .cal-more { font-size: .62rem; color: var(--text-soft); font-weight: 700; cursor: pointer; padding: 1px 3px; }
+    .cal-event-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; cursor: pointer; margin: 1px; flex-shrink: 0; transition: transform .15s; }
+    .cal-event-dot:hover { transform: scale(1.3); }
+    .cal-dots-row { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 2px; }
+    .cal-more { font-size: .58rem; color: var(--text-soft); font-weight: 700; cursor: pointer; padding: 1px 2px; }
     .cal-more:hover { color: var(--gold); }
+    @media (max-width: 900px) {
+      .cal-section { padding: 14px 10px 18px; }
+      .cal-cell { min-height: 56px; padding: 3px 2px; border-radius: 4px; }
+      .cal-cell-num { font-size: .65rem; width: 18px; height: 18px; }
+      .cal-event-pill { display: none; } /* on mobile show dots only */
+      .cal-dots-row { display: flex; }
+      .cal-legend { gap: 6px; }
+      .cal-legend-item { font-size: .64rem; }
+      .cal-month-label { font-size: .9rem; }
+    }
+    @media (max-width: 480px) {
+      .cal-grid { gap: 1px; }
+      .cal-cell { min-height: 48px; }
+      .cal-day-header { font-size: .58rem; padding: 4px 0; }
+    }
     /* ══ END MONTHLY CALENDAR ══ */
 
     /* ══════════════════════ RESPONSIVE ══════════════════════ */
@@ -481,6 +499,7 @@
     <div class="cat-bar" id="cat-bar">
       <div class="cat-tabs">
         <button class="cat-tab active" data-cat="all">🌟 הכל</button>
+        <button class="cat-tab" data-cat="calendar" onclick="switchToCalendar(this)">📅 יומן פעילויות</button>
         <button class="cat-tab" data-cat="events">🗓️ במעגל השנה</button>
         <button class="cat-tab" data-cat="playground">🎠 משחקייה</button>
         <button class="cat-tab" data-cat="classes">🎨 חוגים</button>
@@ -488,9 +507,8 @@
       </div>
     </div>
 
-    <!-- PAGE: EVENTS -->
-    <div class="page active" id="page-events">
-      <!-- MONTHLY CALENDAR -->
+    <!-- PAGE: CALENDAR -->
+    <div class="page" id="page-calendar">
       <div class="cal-section" id="cal-section">
         <div class="cal-header">
           <div class="cal-nav">
@@ -502,6 +520,10 @@
         </div>
         <div class="cal-grid" id="cal-grid"></div>
       </div>
+    </div>
+
+    <!-- PAGE: EVENTS -->
+    <div class="page active" id="page-events">
       <div class="section">
         <div class="section-hdr">
           <h2 class="section-title">אירועים קרובים</h2>
@@ -762,12 +784,25 @@
   /* category tabs */
   document.querySelectorAll('.cat-tab').forEach(tab => {
     tab.addEventListener('click', () => {
+      if (tab.dataset.cat === 'calendar') return; /* handled by switchToCalendar() */
       document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
       currentCat = tab.dataset.cat;
+      /* hide calendar page, show events page */
+      document.getElementById('page-calendar').classList.remove('active');
+      document.getElementById('page-events').classList.add('active');
       renderCards(currentCat);
     });
   });
+
+  /* exposed to onclick on calendar tab button */
+  window.switchToCalendar = function(btn) {
+    document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-events').classList.remove('active');
+    document.getElementById('page-calendar').classList.add('active');
+    renderCalendar();
+  };
 
   const CAT_LABEL = {events:'במעגל השנה', playground:'משחקייה', classes:'חוגים', inflatables:'מתנפחים', beitmidrash:'בית מדרש קהילתי'};
   const CAT_COLOR = {events:'#C8882Acc', playground:'#3d8a3dcc', classes:'#2d5aa0cc', inflatables:'#9b42d4cc', beitmidrash:'#8B4513cc'};
@@ -874,12 +909,11 @@
 
     /* build calendar cells */
     const firstDay = new Date(calYear, calMonth, 1);
-    /* Hebrew calendar: week starts Sunday=0, we want Sun on left */
     let startDow = firstDay.getDay(); /* 0=Sun */
-    /* In RTL layout with Hebrew week Sun–Sat, index as-is */
     const daysInMonth   = new Date(calYear, calMonth+1, 0).getDate();
     const daysInPrevMon = new Date(calYear, calMonth, 0).getDate();
     const today = new Date();
+    const isMobile = window.innerWidth <= 900;
 
     const dayHeaders = ['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
     let html = dayHeaders.map(d => `<div class="cal-day-header">${d}</div>`).join('');
@@ -893,7 +927,6 @@
     /* current month */
     for (let day = 1; day <= daysInMonth; day++) {
       const isToday = today.getFullYear()===calYear && today.getMonth()===calMonth && today.getDate()===day;
-      const cellDate = new Date(calYear, calMonth, day);
 
       /* events on this day */
       const dayEvents = eventsWithDates.filter(x => {
@@ -901,22 +934,32 @@
         return d.getFullYear()===calYear && d.getMonth()===calMonth && d.getDate()===day;
       });
 
-      const maxShow = 3;
-      const pillsHtml = dayEvents.slice(0, maxShow).map(x => {
-        const col = CAT_COLOR_SOLID[x.ev.category||'events'] || CAT_COLOR_SOLID.events;
-        const isBM = x.ev._isBM ? '1' : '0';
-        return `<div class="cal-event-pill" style="background:${col}" data-cal-id="${x.ev.id}" data-cal-bm="${isBM}" title="${x.ev.title}">${x.ev.title}</div>`;
-      }).join('');
-      const moreHtml = dayEvents.length > maxShow
-        ? `<div class="cal-more">+${dayEvents.length - maxShow} עוד</div>` : '';
+      let innerHtml = '';
+      if (isMobile) {
+        /* Mobile: show colored dots */
+        const dotsHtml = dayEvents.slice(0,5).map(x => {
+          const col = CAT_COLOR_SOLID[x.ev.category||'events'] || CAT_COLOR_SOLID.events;
+          return `<span class="cal-event-dot" style="background:${col}" data-cal-id="${x.ev.id}" data-cal-bm="${x.ev._isBM?'1':'0'}" title="${x.ev.title}"></span>`;
+        }).join('');
+        const moreHtml = dayEvents.length > 5 ? `<span class="cal-more">+${dayEvents.length-5}</span>` : '';
+        innerHtml = dayEvents.length ? `<div class="cal-dots-row">${dotsHtml}${moreHtml}</div>` : '';
+      } else {
+        /* Desktop: show text pills */
+        const maxShow = 3;
+        innerHtml = dayEvents.slice(0, maxShow).map(x => {
+          const col = CAT_COLOR_SOLID[x.ev.category||'events'] || CAT_COLOR_SOLID.events;
+          return `<div class="cal-event-pill" style="background:${col}" data-cal-id="${x.ev.id}" data-cal-bm="${x.ev._isBM?'1':'0'}" title="${x.ev.title}">${x.ev.title}</div>`;
+        }).join('');
+        if (dayEvents.length > maxShow) innerHtml += `<div class="cal-more">+${dayEvents.length-maxShow} עוד</div>`;
+      }
 
       html += `<div class="cal-cell${isToday?' today':''}">
         <div class="cal-cell-num">${day}</div>
-        ${pillsHtml}${moreHtml}
+        ${innerHtml}
       </div>`;
     }
 
-    /* next month filler to complete last row */
+    /* next month filler */
     const totalCells = startDow + daysInMonth;
     const remainder  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
     for (let i = 1; i <= remainder; i++) {
@@ -925,12 +968,12 @@
 
     grid.innerHTML = html;
 
-    /* attach click handlers to pills */
-    grid.querySelectorAll('.cal-event-pill').forEach(pill => {
-      pill.addEventListener('click', (e) => {
+    /* attach click handlers */
+    grid.querySelectorAll('[data-cal-id]').forEach(el => {
+      el.addEventListener('click', (e) => {
         e.stopPropagation();
-        const id   = pill.dataset.calId;
-        const isBM = pill.dataset.calBm === '1';
+        const id   = el.dataset.calId;
+        const isBM = el.dataset.calBm === '1';
         openDetail(id, isBM ? allBM : allEvents);
       });
     });
@@ -945,6 +988,9 @@
     calMonth++;
     if (calMonth > 11) { calMonth = 0; calYear++; }
     renderCalendar();
+  });
+  window.addEventListener('resize', () => {
+    if (document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
   });
   /* ══ END MONTHLY CALENDAR ══ */
 
