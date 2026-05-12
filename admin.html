@@ -417,6 +417,18 @@
       <label for="f-pinned" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">📌 נעוץ – יופיע ראשון ללא קשר לתאריך ההוספה</label>
     </div>
 
+    <!-- Hide sections -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(45,90,160,.05);border:1.5px solid rgba(45,90,160,.15);border-radius:10px;margin:0">
+        <input type="checkbox" id="f-hide-cd" style="width:18px;height:18px;accent-color:#2d5aa0;cursor:pointer;flex-shrink:0">
+        <label for="f-hide-cd" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">⏳ הסתר ספירה לאחור מדף האירוע</label>
+      </div>
+      <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(45,90,160,.05);border:1.5px solid rgba(45,90,160,.15);border-radius:10px;margin:0">
+        <input type="checkbox" id="f-hide-calc" style="width:18px;height:18px;accent-color:#2d5aa0;cursor:pointer;flex-shrink:0">
+        <label for="f-hide-calc" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">🧮 הסתר מחשבון מחיר מדף האירוע</label>
+      </div>
+    </div>
+
     <!-- Google Form -->
     <div class="fg">
       <label>קישור לטופס גוגל <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(אופציונלי)</span></label>
@@ -569,6 +581,8 @@
     ['f-title','f-desc','f-adult','f-child','f-child-note','f-deadline','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
     const catEl=$('f-cat'); if(catEl) catEl.value= currentCollection==='beitmidrash' ? 'beitmidrash' : 'events';
     const pinnedEl=$('f-pinned'); if(pinnedEl) pinnedEl.checked=false;
+    const hideCdEl=$('f-hide-cd'); if(hideCdEl) hideCdEl.checked=false;
+    const hideCalcEl=$('f-hide-calc'); if(hideCalcEl) hideCalcEl.checked=false;
     const prevEl=$('upload-preview'); if(prevEl) prevEl.style.display='none';
     const urlPrev=$('url-preview'); if(urlPrev) urlPrev.style.display='none';
     const payRows=$('pay-rows'); if(payRows) payRows.innerHTML='';
@@ -585,6 +599,8 @@
       $('f-child-note').value   = ev.priceChildNote||'';
       $('f-cat').value          = ev.category||(currentCollection==='beitmidrash'?'beitmidrash':'events');
       $('f-pinned').checked     = !!ev.pinned;
+      $('f-hide-cd').checked    = !!ev.hideCountdown;
+      $('f-hide-calc').checked  = !!ev.hideCalc;
       $('f-form-url').value     = ev.formLink||'';
       $('f-form-label').value   = ev.formLabel||'';
       const d=dl(ev);
@@ -684,6 +700,8 @@
     const imgUrl=     $('f-img-url').value.trim();
     const useUrl=     $('ip-url').classList.contains('on');
     const pinned=     $('f-pinned').checked;
+    const hideCountdown= $('f-hide-cd').checked;
+    const hideCalc=      $('f-hide-calc').checked;
     const formLink=   $('f-form-url').value.trim()||null;
     const formLabel=  $('f-form-label').value.trim()||null;
 
@@ -714,7 +732,7 @@
         title, description:desc, priceAdult:adult, priceChild:child, priceChildNote:childNote,
         category:cat, imageUrl, paymentLink, paymentLabel, paymentButtons,
         registrationDeadline:dlRaw?new Date(dlRaw):null,
-        pinned, formLink, formLabel,
+        pinned, hideCountdown, hideCalc, formLink, formLabel,
         updatedAt:serverTimestamp()
       };
 
