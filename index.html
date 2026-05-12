@@ -955,7 +955,26 @@
       ...allBM.map(ev => ({...ev, category: ev.category||'beitmidrash', _isBM: true}))
     ];
     let list = cat==='all' ? merged : merged.filter(ev=>(ev.category||'events')===cat);
-    list = [...list].sort((a,b) => (a.pinned&&!b.pinned)?-1:(!a.pinned&&b.pinned)?1:0);
+    const now = new Date();
+    list = [...list].sort((a, b) => {
+      /* נעוצים תמיד ראשונים */
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      const da = deadline(a), db_ = deadline(b);
+      const aFuture = da && !isNaN(da) && da > now;
+      const bFuture = db_ && !isNaN(db_) && db_ > now;
+      /* שני אירועים עתידיים – מוקדם קודם */
+      if (aFuture && bFuture) return da - db_;
+      /* שניהם עבר / ללא תאריך – מאוחר קודם (ולאחרון למטה) */
+      if (!aFuture && !bFuture) {
+        if (da && db_) return db_ - da;
+        if (da) return 1;
+        if (db_) return -1;
+        return 0;
+      }
+      /* עתידי לפני עבר */
+      return aFuture ? -1 : 1;
+    });
     eventsCount.textContent = list.length;
     if (!list.length) { eventsGrid.innerHTML='<div class="empty"><div class="empty-icon">🗓️</div><p>אין אירועים בקטגוריה זו</p></div>'; return; }
     eventsGrid.innerHTML = list.map(ev => {
