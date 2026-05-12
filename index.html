@@ -515,8 +515,9 @@
   <nav class="mobile-drawer-nav">
     <button class="sidebar-link active" data-page="events"       onclick="showPage('events',this);closeDrawer()"><span class="link-icon">🌟</span>כלל האירועים</button>
     <div style="height:1px;background:var(--border);margin:4px 16px 8px"></div>
-    <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>משחקייה</button>
-    <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>חוגים</button>
+    <button class="sidebar-link"        data-page="playground"   onclick="showPage('playground',this);closeDrawer()"><span class="link-icon">🎠</span>תשלומי משחקייה</button>
+    <button class="sidebar-link"        data-page="classes"      onclick="showPage('classes',this);closeDrawer()"><span class="link-icon">🎨</span>תשלומי חוגים</button>
+    <div style="height:1px;background:var(--border);margin:4px 16px 8px"></div>
     <button class="sidebar-link"        data-page="beitmidrash"  onclick="showPage('beitmidrash',this);closeDrawer()"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
     <button class="sidebar-link"        data-page="mishu"        onclick="showPage('mishu',this);closeDrawer()"><span class="link-icon">🎭</span>משו לנפש</button>
     <button class="sidebar-link"        data-page="inflatables"  onclick="showPage('inflatables',this);closeDrawer()"><span class="link-icon">🎈</span>מתנפחים</button>
@@ -546,8 +547,9 @@
     <nav class="sidebar-nav">
       <button class="sidebar-link active" data-page="events"      onclick="showPage('events',this)"><span class="link-icon">🌟</span>כלל האירועים</button>
       <div class="sidebar-divider"></div>
-      <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>משחקייה</button>
-      <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>חוגים</button>
+      <button class="sidebar-link"        data-page="playground"  onclick="showPage('playground',this)"><span class="link-icon">🎠</span>תשלומי משחקייה</button>
+      <button class="sidebar-link"        data-page="classes"     onclick="showPage('classes',this)"><span class="link-icon">🎨</span>תשלומי חוגים</button>
+      <div class="sidebar-divider"></div>
       <button class="sidebar-link"        data-page="beitmidrash" onclick="showPage('beitmidrash',this)"><span class="link-icon">📖</span>בית מדרש קהילתי</button>
       <button class="sidebar-link"        data-page="mishu"       onclick="showPage('mishu',this)"><span class="link-icon">🎭</span>משו לנפש</button>
       <button class="sidebar-link"        data-page="inflatables" onclick="showPage('inflatables',this)"><span class="link-icon">🎈</span>מתנפחים</button>
@@ -865,6 +867,7 @@
       const snap = await getDocs(q);
       allBM = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderBM();
+      renderCards(currentCat); /* refresh "הכל" with BM events */
       renderCalendar();
     } catch(e) {
       grid.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>שגיאה בטעינת בית המדרש</p></div>';
