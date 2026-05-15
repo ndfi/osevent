@@ -1726,6 +1726,19 @@
 
   initCalendar();
   await Promise.all([loadSettings(), loadEvents(), loadInflatables(), loadBeitMidrash()]);
+
+  /* ── DEEP LINK: ?event=ID ── */
+  const urlParams = new URLSearchParams(location.search);
+  const deepEventId = urlParams.get('event');
+  if (deepEventId) {
+    const inBM = allBM.find(e => e.id === deepEventId);
+    const inEvents = allEvents.find(e => e.id === deepEventId);
+    if (inBM || inEvents) {
+      openDetail(deepEventId, inBM ? allBM : allEvents);
+    }
+    /* clean URL without reloading */
+    history.replaceState(null, '', location.pathname);
+  }
   renderMishuPage();
   initTodayPopup();
 </script>
