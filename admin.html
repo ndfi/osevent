@@ -335,8 +335,6 @@
           <div class="sc-title"><span class="ic">📞</span> יצירת קשר</div>
           <div class="fg"><label>טלפון</label><input class="fi" id="s-phone" placeholder="050-1234567" type="tel"></div>
           <div class="fg"><label>WhatsApp</label><input class="fi" id="s-wa" placeholder="050-1234567" type="tel"></div>
-          <div class="fg"><label>עמוד פייסבוק – קישור</label><input class="fi" id="s-facebook" placeholder="https://facebook.com/..." type="url"></div>
-          <div class="fg"><label>ועדת יולדות – קישור חיצוני</label><input class="fi" id="s-vaada" placeholder="https://..." type="url"></div>
           <button class="btn-ss" id="save-contact">שמור</button>
         </div>
 
@@ -381,7 +379,7 @@
         <div class="upload-area" id="upload-area">
           <input type="file" id="upload-input" accept="image/*">
           <div class="upload-icon">🖼️</div>
-          <div class="upload-text">גרור תמונה לכאן או לחץ לבחירה<small>JPG · PNG · WebP · מקסימום 5MB</small></div>
+          <div class="upload-text">גרור תמונה לכאן או לחץ לבחירה<small>JPG · PNG · WebP · מקסימום 5MB · תועלה אוטומטית</small></div>
           <img id="upload-preview" alt="">
         </div>
       </div>
@@ -399,7 +397,6 @@
         <option value="playground">🎠 משחקייה</option>
         <option value="classes">🎨 חוגים</option>
         <option value="beitmidrash">📖 בית מדרש קהילתי</option>
-        <option value="mishu">🎭 משו לנפש</option>
       </select>
     </div>
 
@@ -415,18 +412,6 @@
     <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(200,136,42,.06);border:1.5px solid rgba(200,136,42,.18);border-radius:10px">
       <input type="checkbox" id="f-pinned" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
       <label for="f-pinned" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">📌 נעוץ – יופיע ראשון ללא קשר לתאריך ההוספה</label>
-    </div>
-
-    <!-- Hide sections -->
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(45,90,160,.05);border:1.5px solid rgba(45,90,160,.15);border-radius:10px;margin:0">
-        <input type="checkbox" id="f-hide-cd" style="width:18px;height:18px;accent-color:#2d5aa0;cursor:pointer;flex-shrink:0">
-        <label for="f-hide-cd" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">⏳ הסתר ספירה לאחור מדף האירוע</label>
-      </div>
-      <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(45,90,160,.05);border:1.5px solid rgba(45,90,160,.15);border-radius:10px;margin:0">
-        <input type="checkbox" id="f-hide-calc" style="width:18px;height:18px;accent-color:#2d5aa0;cursor:pointer;flex-shrink:0">
-        <label for="f-hide-calc" style="font-size:.9rem;font-weight:700;color:var(--brown-dark);cursor:pointer;margin:0">🧮 הסתר מחשבון מחיר מדף האירוע</label>
-      </div>
     </div>
 
     <!-- Google Form -->
@@ -478,8 +463,6 @@
   import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
   import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -495,7 +478,6 @@
   const app     = initializeApp(FB);
   getAnalytics(app);
   const db      = getFirestore(app);
-  const storage = getStorage(app);
   const auth    = getAuth(app);
 
   /* ── DOM ── */
@@ -581,8 +563,6 @@
     ['f-title','f-desc','f-adult','f-child','f-child-note','f-deadline','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
     const catEl=$('f-cat'); if(catEl) catEl.value= currentCollection==='beitmidrash' ? 'beitmidrash' : 'events';
     const pinnedEl=$('f-pinned'); if(pinnedEl) pinnedEl.checked=false;
-    const hideCdEl=$('f-hide-cd'); if(hideCdEl) hideCdEl.checked=false;
-    const hideCalcEl=$('f-hide-calc'); if(hideCalcEl) hideCalcEl.checked=false;
     const prevEl=$('upload-preview'); if(prevEl) prevEl.style.display='none';
     const urlPrev=$('url-preview'); if(urlPrev) urlPrev.style.display='none';
     const payRows=$('pay-rows'); if(payRows) payRows.innerHTML='';
@@ -599,8 +579,6 @@
       $('f-child-note').value   = ev.priceChildNote||'';
       $('f-cat').value          = ev.category||(currentCollection==='beitmidrash'?'beitmidrash':'events');
       $('f-pinned').checked     = !!ev.pinned;
-      $('f-hide-cd').checked    = !!ev.hideCountdown;
-      $('f-hide-calc').checked  = !!ev.hideCalc;
       $('f-form-url').value     = ev.formLink||'';
       $('f-form-label').value   = ev.formLabel||'';
       const d=dl(ev);
@@ -636,20 +614,37 @@
   });
 
   /* Upload */
+  const FREEIMAGE_KEY = '6d207e02198a847aa98d0a2a901485a5';
+
+  async function uploadToFreeImage(file) {
+    const formData = new FormData();
+    formData.append('key',    FREEIMAGE_KEY);
+    formData.append('action', 'upload');
+    formData.append('source', file);
+    formData.append('format', 'json');
+    const res  = await fetch('https://freeimage.host/api/1/upload', { method: 'POST', body: formData });
+    const json = await res.json();
+    if (!json.status_code || json.status_code !== 200) throw new Error(json.error?.message || 'שגיאה בהעלאת התמונה');
+    return json.image.url; /* direct image URL */
+  }
+
   const uploadInput=$('upload-input'), uploadArea=$('upload-area'), uploadPrev=$('upload-preview');
-  uploadInput.addEventListener('change',e=>{
-    const f=e.target.files[0];
-    if(!f)return;
-    if(!f.type.startsWith('image/')){showToast('יש לבחור קובץ תמונה',true);return}
-    if(f.size>5*1024*1024){showToast('מקסימום 5MB',true);return}
-    uploadFile=f;
-    const r=new FileReader();r.onload=ev=>{uploadPrev.src=ev.target.result;uploadPrev.style.display='block'};r.readAsDataURL(f);
+  uploadInput.addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { showToast('יש לבחור קובץ תמונה', true); return; }
+    if (f.size > 5*1024*1024) { showToast('מקסימום 5MB', true); return; }
+    uploadFile = f;
+    /* show local preview immediately */
+    const r = new FileReader();
+    r.onload = ev => { uploadPrev.src = ev.target.result; uploadPrev.style.display = 'block'; };
+    r.readAsDataURL(f);
   });
-  uploadArea.addEventListener('dragover',e=>{e.preventDefault();uploadArea.classList.add('drag-over')});
-  uploadArea.addEventListener('dragleave',()=>uploadArea.classList.remove('drag-over'));
-  uploadArea.addEventListener('drop',e=>{
-    e.preventDefault();uploadArea.classList.remove('drag-over');
-    if(e.dataTransfer.files[0]){uploadInput.files=e.dataTransfer.files;uploadInput.dispatchEvent(new Event('change'))}
+  uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault(); uploadArea.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) { uploadInput.files = e.dataTransfer.files; uploadInput.dispatchEvent(new Event('change')); }
   });
 
   /* Pay rows – MAX 2 */
@@ -700,8 +695,6 @@
     const imgUrl=     $('f-img-url').value.trim();
     const useUrl=     $('ip-url').classList.contains('on');
     const pinned=     $('f-pinned').checked;
-    const hideCountdown= $('f-hide-cd').checked;
-    const hideCalc=      $('f-hide-calc').checked;
     const formLink=   $('f-form-url').value.trim()||null;
     const formLabel=  $('f-form-label').value.trim()||null;
 
@@ -719,9 +712,8 @@
       if(useUrl&&imgUrl) imageUrl=imgUrl;
       else if(uploadFile){
         const ext=uploadFile.name.split('.').pop();
-        const sRef=ref(storage,`events/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`);
-        const snap=await uploadBytes(sRef,uploadFile);
-        imageUrl=await getDownloadURL(snap.ref);
+        btn.textContent='מעלה תמונה...';
+        imageUrl = await uploadToFreeImage(uploadFile);
       }
 
       const paymentLink   = payBtns[0]?.url   || null;
@@ -732,7 +724,7 @@
         title, description:desc, priceAdult:adult, priceChild:child, priceChildNote:childNote,
         category:cat, imageUrl, paymentLink, paymentLabel, paymentButtons,
         registrationDeadline:dlRaw?new Date(dlRaw):null,
-        pinned, hideCountdown, hideCalc, formLink, formLabel,
+        pinned, formLink, formLabel,
         updatedAt:serverTimestamp()
       };
 
@@ -753,10 +745,6 @@
   $('btn-del-yes').onclick=async()=>{
     if(!deleteId)return; showProg(true);
     try{
-      const ev=allEvents.find(e=>e.id===deleteId);
-      if(ev?.imageUrl&&ev.imageUrl.includes('firebasestorage')){
-        try{await deleteObject(ref(storage,ev.imageUrl))}catch(_){}
-      }
       await deleteDoc(doc(db,'events',deleteId));
       showToast('🗑️ האירוע נמחק'); cdlg.classList.remove('active'); deleteId=null;
       await loadEvents();
@@ -774,13 +762,11 @@
 
   function applySettingsUI(){
     const s=settingsData;
-    if(s.orgName)     $('s-org').value    =s.orgName;
-    if(s.logoUrl)     $('s-logo').value   =s.logoUrl;
-    if(s.heroBgUrl)   $('s-hero').value   =s.heroBgUrl;
-    if(s.phone)       $('s-phone').value  =s.phone;
-    if(s.whatsapp)    $('s-wa').value     =s.whatsapp;
-    if(s.facebookUrl) $('s-facebook').value=s.facebookUrl;
-    if(s.vaadaUrl)    $('s-vaada').value  =s.vaadaUrl;
+    if(s.orgName)  $('s-org').value  =s.orgName;
+    if(s.logoUrl)  $('s-logo').value =s.logoUrl;
+    if(s.heroBgUrl)$('s-hero').value =s.heroBgUrl;
+    if(s.phone)    $('s-phone').value=s.phone;
+    if(s.whatsapp) $('s-wa').value   =s.whatsapp;
     renderPiList('pi-play',  s.playgroundItems||[]);
     renderPiList('pi-class', s.classItems||[]);
   }
@@ -796,7 +782,7 @@
   }
 
   $('save-gen').onclick   = ()=>saveSettings({orgName:$('s-org').value.trim(),logoUrl:$('s-logo').value.trim(),heroBgUrl:$('s-hero').value.trim()});
-  $('save-contact').onclick=()=>saveSettings({phone:$('s-phone').value.trim(),whatsapp:$('s-wa').value.trim(),facebookUrl:$('s-facebook').value.trim(),vaadaUrl:$('s-vaada').value.trim()});
+  $('save-contact').onclick=()=>saveSettings({phone:$('s-phone').value.trim(),whatsapp:$('s-wa').value.trim()});
   $('save-play').onclick  = ()=>saveSettings({playgroundItems:collectPi('pi-play')});
   $('save-class').onclick = ()=>saveSettings({classItems:collectPi('pi-class')});
   $('add-play').onclick   = ()=>addPiRow('pi-play');
@@ -853,7 +839,7 @@
     const ev = allBM.find(e=>e.id===id);
     if (!ev) return;
     // reuse the events form modal
-    openForm(id, ev, 'beitmidrash');
+    openForm(id, ev, 'bm');
   };
 
   window.bmDelete = async function(id) {
@@ -879,7 +865,7 @@
     });
   }
 
-  $('btn-new-bm').addEventListener('click', () => openForm(null, null, 'beitmidrash'));
+  $('btn-new-bm').addEventListener('click', () => openForm(null, null, 'bm'));
   /* ══ END BEIT MIDRASH ADMIN ══ */
   let allInflatables = [], infEditId = null;
 
