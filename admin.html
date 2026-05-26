@@ -614,10 +614,7 @@
   });
 
   /* Upload */
-  const FREEIMAGE_KEY = '6d207e02198a847aa98d0a2a901485a5';
-
   async function uploadToFreeImage(file) {
-    /* Convert to base64 – avoids CORS preflight */
     const base64 = await new Promise((res, rej) => {
       const r = new FileReader();
       r.onload  = () => res(r.result.split(',')[1]);
@@ -625,21 +622,14 @@
       r.readAsDataURL(file);
     });
 
-    const body = new URLSearchParams();
-    body.append('key',    FREEIMAGE_KEY);
-    body.append('action', 'upload');
-    body.append('source', base64);
-    body.append('format', 'json');
+    const fd = new FormData();
+    fd.append('key',   'f89166ca48bf7f6eafdbf03b9b5a288b');
+    fd.append('image', base64);
 
-    const res  = await fetch('https://freeimage.host/api/1/upload', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    body.toString()
-    });
+    const res  = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
     const json = await res.json();
-    if (!json.status_code || json.status_code !== 200)
-      throw new Error(json.error?.message || 'שגיאה בהעלאת התמונה');
-    return json.image.url;
+    if (!json.success) throw new Error(json.error?.message || 'שגיאה בהעלאת התמונה');
+    return json.data.display_url;
   }
 
   const uploadInput=$('upload-input'), uploadArea=$('upload-area'), uploadPrev=$('upload-preview');
