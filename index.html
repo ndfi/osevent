@@ -1098,23 +1098,37 @@
       );
     }
     const now = new Date();
+
+    /* ═══════════════════════════════════════════════════════════
+       מיון כרונולוגי – הסדר הזה הוא הלב של חוויית המשתמש:
+       תמיד לדעת מה האירוע הבא בלי לחפש.
+
+       1. נעוצים (pinned) – תמיד ראשונים
+       2. אירועים עתידיים – ממוינים מהקרוב ביותר לרחוק
+       3. אירועים שעברו – ממוינים מהאחרון שעבר כלפי מעלה
+    ════════════════════════════════════════════════════════════ */
     list = [...list].sort((a, b) => {
-      /* נעוצים תמיד ראשונים */
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      const da = deadline(a), db_ = deadline(b);
-      const aFuture = da && !isNaN(da) && da > now;
-      const bFuture = db_ && !isNaN(db_) && db_ > now;
-      /* שני אירועים עתידיים – מוקדם קודם */
+
+      const da = eventDate(a);
+      const db_ = eventDate(b);
+
+      const aFuture = da && da >= now;
+      const bFuture = db_ && db_ >= now;
+
+      /* שניהם עתידיים: הקרוב ביותר ראשון */
       if (aFuture && bFuture) return da - db_;
-      /* שניהם עבר / ללא תאריך – מאוחר קודם (ולאחרון למטה) */
+
+      /* שניהם עברו: האחרון שעבר ראשון (רלוונטי יותר) */
       if (!aFuture && !bFuture) {
         if (da && db_) return db_ - da;
-        if (da) return 1;
-        if (db_) return -1;
+        if (da) return -1;  /* בעל תאריך לפני חסר תאריך */
+        if (db_) return 1;
         return 0;
       }
-      /* עתידי לפני עבר */
+
+      /* עתידי תמיד לפני שעבר */
       return aFuture ? -1 : 1;
     });
     eventsCount.textContent = list.length;
