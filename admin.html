@@ -406,7 +406,16 @@
     </div>
     <div class="fg"><label>הערה למחיר ילד <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(תוצג בסוגריים – לדוגמה: מגיל שנה)</span></label><input class="fi" id="f-child-note" placeholder="מגיל שנה ומעלה"></div>
 
-    <div class="fg"><label>מועד סיום הרשמה</label><input class="fi" type="datetime-local" id="f-deadline"></div>
+    <div class="frow">
+      <div class="fg">
+        <label>📅 תאריך האירוע <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(יופיע ביומן)</span></label>
+        <input class="fi" type="datetime-local" id="f-event-date">
+      </div>
+      <div class="fg">
+        <label>⏳ מועד סגירת הרשמה <span style="font-size:.72rem;color:var(--text-soft);font-weight:400">(לספירה לאחור)</span></label>
+        <input class="fi" type="datetime-local" id="f-deadline">
+      </div>
+    </div>
 
     <!-- Pinned -->
     <div class="fg" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(200,136,42,.06);border:1.5px solid rgba(200,136,42,.18);border-radius:10px">
@@ -560,7 +569,7 @@
   function openForm(id, evObj, collectionName){
     currentCollection = collectionName || 'events';
     editId=id; uploadFile=null; existingUrl=null; payRowCount=0;
-    ['f-title','f-desc','f-adult','f-child','f-child-note','f-deadline','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
+    ['f-title','f-desc','f-adult','f-child','f-child-note','f-deadline','f-event-date','f-img-url','f-form-url','f-form-label'].forEach(i=>{const el=$(i);if(el)el.value=''});
     const catEl=$('f-cat'); if(catEl) catEl.value= currentCollection==='beitmidrash' ? 'beitmidrash' : 'events';
     const pinnedEl=$('f-pinned'); if(pinnedEl) pinnedEl.checked=false;
     const prevEl=$('upload-preview'); if(prevEl) prevEl.style.display='none';
@@ -583,6 +592,11 @@
       $('f-form-label').value   = ev.formLabel||'';
       const d=dl(ev);
       if(d&&!isNaN(d)) $('f-deadline').value=d.toISOString().slice(0,16);
+      /* restore eventDate */
+      if(ev.eventDate) {
+        const ed = ev.eventDate?.toDate ? ev.eventDate.toDate() : new Date(ev.eventDate);
+        if(!isNaN(ed)) $('f-event-date').value = ed.toISOString().slice(0,16);
+      }
       if(ev.imageUrl){existingUrl=ev.imageUrl;$('upload-preview').src=ev.imageUrl;$('upload-preview').style.display='block'}
       const existing=[];
       if(ev.paymentLink) existing.push({label:ev.paymentLabel||'לתשלום מאובטח',url:ev.paymentLink});
@@ -695,7 +709,8 @@
     const child=      parseFloat($('f-child').value)||0;
     const childNote=  $('f-child-note').value.trim()||null;
     const cat=        $('f-cat').value;
-    const dlRaw=      $('f-deadline').value;
+    const dlRaw=        $('f-deadline').value;
+    const eventDateRaw= $('f-event-date').value;
     const imgUrl=     $('f-img-url').value.trim();
     const useUrl=     $('ip-url').classList.contains('on');
     const pinned=     $('f-pinned').checked;
@@ -727,7 +742,8 @@
       const data={
         title, description:desc, priceAdult:adult, priceChild:child, priceChildNote:childNote,
         category:cat, imageUrl, paymentLink, paymentLabel, paymentButtons,
-        registrationDeadline:dlRaw?new Date(dlRaw):null,
+        registrationDeadline: dlRaw ? new Date(dlRaw) : null,
+        eventDate:            eventDateRaw ? new Date(eventDateRaw) : null,
         pinned, formLink, formLabel,
         updatedAt:serverTimestamp()
       };
