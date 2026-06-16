@@ -1051,10 +1051,37 @@
   const CAT_COLOR = {events:'#C8882Acc', playground:'#3d8a3dcc', classes:'#2d5aa0cc', inflatables:'#9b42d4cc', beitmidrash:'#8B4513cc', mishu:'#d4437acc'};
 
   function deadline(ev) {
-    if (!ev.registrationDeadline) return null;
-    return ev.registrationDeadline?.toDate ? ev.registrationDeadline.toDate() : new Date(ev.registrationDeadline);
+    /* מועד סגירת הרשמה – לספירה לאחור ולכפתור הרשמה */
+    if (ev.registrationDeadline) {
+      const d = ev.registrationDeadline?.toDate ? ev.registrationDeadline.toDate() : new Date(ev.registrationDeadline);
+      if (!isNaN(d)) return d;
+    }
+    /* fallback לאירועים ישנים שיש להם רק date */
+    if (ev.date) {
+      const d = ev.date?.toDate ? ev.date.toDate() : new Date(ev.date);
+      if (!isNaN(d)) return d;
+    }
+    return null;
   }
   function isClosed(ev) { const d=deadline(ev); return d&&!isNaN(d)&&d<=new Date(); }
+
+  function eventDate(ev) {
+    /* תאריך האירוע עצמו – מה שמופיע ביומן השבועי/חודשי */
+    if (ev.eventDate) {
+      const d = ev.eventDate?.toDate ? ev.eventDate.toDate() : new Date(ev.eventDate);
+      if (!isNaN(d)) return d;
+    }
+    /* fallback: תאריך סגירת הרשמה, ואז date ישן */
+    if (ev.registrationDeadline) {
+      const d = ev.registrationDeadline?.toDate ? ev.registrationDeadline.toDate() : new Date(ev.registrationDeadline);
+      if (!isNaN(d)) return d;
+    }
+    if (ev.date) {
+      const d = ev.date?.toDate ? ev.date.toDate() : new Date(ev.date);
+      if (!isNaN(d)) return d;
+    }
+    return null;
+  }
 
   function renderCards(cat) {
     const merged = [
@@ -1166,15 +1193,6 @@
     btn.classList.add('active');
     renderCalendar();
   };
-
-  function eventDate(ev) {
-    if (ev.registrationDeadline) {
-      const d = ev.registrationDeadline?.toDate ? ev.registrationDeadline.toDate() : new Date(ev.registrationDeadline);
-      if (!isNaN(d)) return d;
-    }
-    if (ev.createdAt?.toDate) return ev.createdAt.toDate();
-    return null;
-  }
 
   function renderCalendar() {
     if (calView === 'week') renderWeekView();
