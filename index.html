@@ -950,8 +950,8 @@
       return;
     }
     grid.innerHTML = allBM.map(ev => {
-      const d  = deadline(ev);
-      const ds = d&&!isNaN(d) ? d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+      const ed = eventDate(ev);
+      const ds = ed&&!isNaN(ed) ? ed.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
       const cl = isClosed(ev);
       return `
       <article class="event-card${ev.pinned?' pinned':''}" data-id="${ev.id}" data-type="bm" role="button" tabindex="0">
@@ -1125,8 +1125,9 @@
       return;
     }
     eventsGrid.innerHTML = list.map(ev => {
-      const d  = deadline(ev);
-      const ds = d&&!isNaN(d) ? d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+      const ed = eventDate(ev);
+      const dl_d = deadline(ev);
+      const ds = ed&&!isNaN(ed) ? ed.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
       const cl = isClosed(ev);
       const ck = ev.category||'events';
       return `
@@ -1373,7 +1374,20 @@
     if (!ev) return;
     clearInterval(cdInterval);
     const d  = deadline(ev);
+    const ed = eventDate(ev);
     const cl = isClosed(ev);
+
+    /* format dates */
+    const edStr = ed&&!isNaN(ed)
+      ? ed.toLocaleDateString('he-IL',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+        + (ed.getHours()||ed.getMinutes() ? ' ' + ed.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}) : '')
+      : '';
+    const dlStr = d&&!isNaN(d)
+      ? d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})
+        + ' ' + d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})
+      : '';
+    /* show deadline below countdown only if different from eventDate */
+    const showDlBelow = dlStr && edStr && dlStr !== edStr.slice(0,dlStr.length);
 
     /* MAX 2 payment buttons */
     const btns = [];
@@ -1402,7 +1416,7 @@
         <div class="d-overlay">
           <h1 class="d-title">${ev.title}</h1>
           <div class="d-meta">
-            ${d&&!isNaN(d) ? `<span class="d-meta-item"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>הרשמה עד ${d.toLocaleDateString('he-IL')}</span>` : ''}
+            ${edStr ? `<span class="d-meta-item"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>${edStr}</span>` : ''}
             <span class="d-meta-item"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>מבוגר ₪${ev.priceAdult||0} | ילד ₪${ev.priceChild||0}</span>
           </div>
         </div>
@@ -1412,6 +1426,7 @@
         ${!ev.hideCountdown ? `<div class="cd-box">
           <div class="cd-label">⏳ זמן שנותר להרשמה</div>
           <div id="cd-inner"></div>
+          ${dlStr ? `<div style="text-align:center;font-size:.75rem;color:var(--text-soft);margin-top:8px;font-weight:600">הרשמה פתוחה עד ${dlStr}</div>` : ''}
         </div>` : ''}
         ${!ev.hideCalc ? `<div class="calc-box">
           <h3 class="calc-title">🧮 מחשבון מחיר</h3>
